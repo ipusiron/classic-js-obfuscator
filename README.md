@@ -1,3 +1,38 @@
+<!--
+---
+id: day042
+slug: classic-js-obfuscator
+
+title: "Classic JS Obfuscator"
+
+subtitle_ja: "古典暗号JavaScript難読化ツール"
+subtitle_en: "Classical Cipher JavaScript Obfuscation Tool"
+
+description_ja: "シーザー暗号を使用してJavaScriptコードを難読化し、自己復号・自己実行可能なスニペットを生成するWebツール"
+description_en: "A web tool that obfuscates JavaScript code using Caesar cipher and generates self-decrypting, self-executing snippets"
+
+category_ja:
+  - 難読化
+  - 古典暗号
+category_en:
+  - Obfuscation
+  - Classical Cryptography
+
+difficulty: 2
+
+tags:
+  - javascript
+  - caesar-cipher
+  - obfuscation
+  - web-tool
+
+repo_url: "https://github.com/ipusiron/classic-js-obfuscator"
+demo_url: "https://ipusiron.github.io/classic-js-obfuscator/"
+
+hub: true
+---
+-->
+
 # Classic JS Obfuscator — 古典暗号JavaScript難読化ツール
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/ipusiron/classic-js-obfuscator?style=social)

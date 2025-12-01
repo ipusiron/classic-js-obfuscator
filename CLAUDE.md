@@ -19,16 +19,18 @@ This is a simple static web application with no build system or dependencies:
 
 ## Key Implementation Details
 
-The obfuscation process works as follows:
+The obfuscation process:
 1. Original JavaScript code is encrypted using Caesar cipher (shift within ASCII visible range 32-126)
 2. A minimal runtime decryption function is embedded in the output
 3. The final output is an IIFE that decrypts and executes the payload using `eval`
 
-Non-ASCII characters (e.g., Japanese text, emojis) pass through unchanged during encryption.
+- Shift range: 0-94 (95 printable ASCII characters)
+- Non-ASCII characters (e.g., Japanese text, emojis) pass through unchanged
 
-## Development Notes
+## Development
 
 - No build process or package manager - pure vanilla JavaScript
+- To test locally, open `index.html` directly in a browser
 - Uses GitHub Pages for deployment at https://ipusiron.github.io/classic-js-obfuscator/
 - The tool is part of the "100 Security Tools with AI" project (Day 042)
 - Vigenère cipher tab is intentionally unimplemented (placeholder for future enhancement)
