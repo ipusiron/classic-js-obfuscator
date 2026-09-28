@@ -21,6 +21,7 @@ This is a simple static web application with no build system or runtime dependen
 - **js/share-settings.js**, **js/share-ui.js**: Strict code-free fragment grammar, canonical URLs, pending previews and explicit atomic settings application
 - **js/comparison-context.js**: Exact string comparison and bounded numeric code-point tokens around the first mismatch
 - **js/i18n.js**: Japanese/English UI dictionaries and language switching
+- **js/theme-init.js**: Blocking head script before CSS; reads only the saved theme and applies it to the document root before body paint
 - **js/sandbox-runner.js**: Fresh iframe lifecycle, ready handshake, source/origin/run-ID validation, and bounded result messages
 - **sandbox/runner.html**, **sandbox/runner.js**, **sandbox/runner.css**: Isolated execution document with its own CSP and result DOM
 - **style.css**: Mobile-first layouts, theme colors, focus styles, and reduced-motion support
@@ -80,6 +81,7 @@ The comparison and quiz paths are non-executing and code-free sharing adds no ne
 - UI/browser checks must cover both editors, every invalidation path, load provenance, same-text manual input, failure cleanup, language-preserved inspection and forbidden execution paths
 - README tests retain the metadata digest and known examples, check all 35 corresponding headings, recalculate marked tables and validate all seven screenshots and inventory
 - Keep source formatted for review; CSS/JavaScript lines are limited to 160 characters and HTML to 250
+- Theme initialization runs before CSS and body parsing; later controls update that same root without rereading storage. Keep the dark default for unset/invalid/unavailable storage. Never add inline script or weaken CSP. Browser checks pause main-script loading and verify the prepaint colors in twelve HTTP/file cases.
 - Keep `.claude/` ignored and do not commit personal paths, local settings, or code entered during testing
 - Uses GitHub Pages for deployment at https://ipusiron.github.io/classic-js-obfuscator/
 - The tool is part of the "100 Security Tools with AI" project (Day 042)

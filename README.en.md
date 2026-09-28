@@ -496,7 +496,8 @@ CI uses `install --with-deps chromium` only inside a disposable Ubuntu runner.
 
 The default browser suite covers HTTP/file, Japanese/English, light/dark and 320/1280px: sixteen cases.
 `--full` adds 390/768px, increasing this to thirty-two cases.
-Four storage-read/write-denial cases and four initial share-preview cases are checked separately.
+Four storage-read/write-denial cases, four initial share-preview cases and twelve initial-theme cases are checked separately.
+An external script applies the saved theme before CSS to avoid switching themes while the main script loads.
 Small widths use mobile contexts; external requests are blocked and the real clipboard is never overwritten.
 Result JSON is saved to the specified report directory.
 
@@ -542,7 +543,8 @@ classic-js-obfuscator/               # Project root
 │   ├── samples.js                   # Six bilingual samples with stable IDs
 │   ├── sandbox-runner.js            # Frame lifecycle and message validation
 │   ├── share-settings.js            # Code-free shared settings grammar
-│   └── share-ui.js                  # Share URL creation and explicit application
+│   ├── share-ui.js                  # Share URL creation and explicit application
+│   └── theme-init.js                # Apply the saved theme before first paint
 ├── LICENSE                          # MIT license
 ├── package.json                     # Dependency-free test commands
 ├── README.en.md                     # Complete English version
@@ -577,6 +579,7 @@ classic-js-obfuscator/               # Project root
     ├── security.test.js             # Detection patterns, statistics and entropy consistency
     ├── share.test.js                # Share URL grammar and atomic apply
     ├── snippet.test.js              # Execution, escaping and scope
+    ├── theme.test.js                # Initial theme and unavailable storage checks
     └── ui.test.js                   # Clipboard waits and interface state changes
 ```
 <!-- inventory:end -->

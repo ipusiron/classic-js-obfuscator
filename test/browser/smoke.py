@@ -144,6 +144,56 @@ def check_presentation(page, language):
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
 
 
+def check_initial_theme(browser, url):
+    cases = [("light", False, False), ("dark", False, False), (None, False, False),
+             ("invalid", False, False), ("light", True, False), ("light", False, True)]
+    for saved, denied, missing in cases:
+        context = browser.new_context()
+        try:
+            config = json.dumps({"saved": saved, "denied": denied, "missing": missing})
+            context.add_init_script("""(() => {
+                const config = CONFIG;
+                if (config.missing) {
+                    Object.defineProperty(window, 'localStorage', {get() {throw Error('unavailable')}});
+                    return;
+                }
+                const get = Storage.prototype.getItem;
+                Storage.prototype.getItem = function(key) {
+                    if (key !== 'theme') return get.call(this, key);
+                    if (config.denied) throw Error('denied');
+                    return config.saved;
+                };
+            })()""".replace("CONFIG", config))
+            page = context.new_page()
+            errors, snapshots = [], []
+            page.on("pageerror", lambda error: errors.append(str(error)))
+            page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
+            expected = "light" if saved == "light" and not denied and not missing else "dark"
+            expected_bg = "rgb(248, 250, 252)" if expected == "light" else "rgb(11, 16, 32)"
+
+            def pause_main(route):
+                page.wait_for_function("document.body && getComputedStyle(document.body).backgroundColor !== 'rgba(0, 0, 0, 0)'")
+                snapshot = page.evaluate("""async () => {
+                    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                    return {theme:document.documentElement.dataset.theme, bg:getComputedStyle(document.body).backgroundColor,
+                            state:document.readyState};
+                }""")
+                snapshots.append(snapshot)
+                route.continue_()
+
+            page.route("**/script.js", pause_main)
+            page.goto(url + "?lang=en")
+            assert len(snapshots) == 1, snapshots
+            assert snapshots[0] == {"theme": expected, "bg": expected_bg, "state": "loading"}, snapshots
+            expect(page.locator("html")).to_have_attribute("data-theme", expected)
+            assert page.locator("body").evaluate("e => getComputedStyle(e).backgroundColor") == expected_bg
+            page.locator("#theme-toggle").click()
+            expect(page.locator("html")).to_have_attribute("data-theme", "dark" if expected == "light" else "light")
+            assert not errors, errors
+        finally:
+            context.close()
+
+
 def check_initial_fragment(browser, url, language):
     context = browser.new_context(locale=language)
     try:
@@ -233,6 +283,7 @@ def main():
             try:
                 urls = {"http": f"http://127.0.0.1:{server.server_port}/", "file": (ROOT / "index.html").as_uri()}
                 for protocol, url in urls.items():
+                    check_initial_theme(browser, url)
                     for language in ("ja", "en"):
                         check_initial_fragment(browser, url, language)
                         for theme in ("light", "dark"):
@@ -245,9 +296,10 @@ def main():
         server.shutdown()
         server.server_close()
     report = {"checked_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              "browser": version, "full": args.full, "initial_fragment_cases": 4, "cases": records}
+              "browser": version, "full": args.full, "initial_fragment_cases": 4, "initial_theme_cases": 12, "cases": records}
     (report_dir / "result.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"passed": len(records), "initial_fragment_cases": 4, "report": str(report_dir / "result.json")}))
+    print(json.dumps({"passed": len(records), "initial_fragment_cases": 4, "initial_theme_cases": 12,
+                      "report": str(report_dir / "result.json")}))
 
 
 def check_share(page, language):

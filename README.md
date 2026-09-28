@@ -530,7 +530,8 @@ CIは使い捨てのUbuntu runner内でのみ`install --with-deps chromium`を�
 
 既定のブラウザー検査はHTTP/file、日英、ライト/ダーク、幅320/1280pxの16条件です。
 `--full`では390/768pxを加えた32条件に増やします。
-別にStorageの読み書き拒否4条件と初回共有URLのプレビュー4条件を検査します。
+別にStorageの読み書き拒否4条件、初回共有URLのプレビュー4条件、初回テーマ12条件を検査します。
+保存テーマはCSSより前に外部JSで反映し、メインJSの読込を待つ間のテーマ切替を防ぎます。
 小画面はモバイルコンテキストで開き、検査中は外部要求を遮断し、クリップボードを実際には上書きしません。
 結果JSONは指定した出力先へ保存します。
 
@@ -576,7 +577,8 @@ classic-js-obfuscator/               # プロジェクトルート
 │   ├── samples.js                   # 同一IDを持つ6教材の日英データ
 │   ├── sandbox-runner.js            # iframeの生成とメッセージ検証
 │   ├── share-settings.js            # コードを含めない共有設定の文法
-│   └── share-ui.js                  # 共有URLと受信設定の明示適用
+│   ├── share-ui.js                  # 共有URLと受信設定の明示適用
+│   └── theme-init.js                # 初回描画前に保存テーマを反映
 ├── LICENSE                          # MITライセンス
 ├── package.json                     # 依存なしのテスト実行設定
 ├── README.en.md                     # 同じ内容の英語版
@@ -611,6 +613,7 @@ classic-js-obfuscator/               # プロジェクトルート
     ├── security.test.js             # 検知式・統計・エントロピーの整合性
     ├── share.test.js                # 共有URL文法と一括適用
     ├── snippet.test.js              # 生成物の実行・エスケープ・スコープ
+    ├── theme.test.js                # 初回テーマと保存不可時の検査
     └── ui.test.js                   # コピー待機中の変更と画面状態
 ```
 <!-- inventory:end -->

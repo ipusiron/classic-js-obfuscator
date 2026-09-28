@@ -491,25 +491,24 @@ function initTutorial() {
 // テーマ切り替え機能
 function initTheme() {
   const themeToggle = $("theme-toggle");
-  const body = document.body;
+  const root = document.documentElement;
 
-  // 保存されたテーマを読み込み、なければダークモードをデフォルト
-  let savedTheme = "dark";
-  try { savedTheme = localStorage.getItem("theme") || "dark"; } catch { /* Optional setting. */ }
+  // The blocking head script already chose the theme before the first content paint.
+  const savedTheme = root.getAttribute("data-theme") === "light" ? "light" : "dark";
 
   function setTheme(theme) {
+    theme = theme === "light" ? "light" : "dark";
+    root.setAttribute("data-theme", theme);
     if (theme === "light") {
-      body.setAttribute("data-theme", "light");
       themeToggle.textContent = "🌙";
     } else {
-      body.removeAttribute("data-theme");
       themeToggle.textContent = "☀️";
     }
     try { localStorage.setItem("theme", theme); } catch { /* Keep the in-memory setting. */ }
   }
 
   function toggleTheme() {
-    const currentTheme = body.getAttribute("data-theme") === "light" ? "light" : "dark";
+    const currentTheme = root.getAttribute("data-theme") === "light" ? "light" : "dark";
     const newTheme = currentTheme === "light" ? "dark" : "light";
     setTheme(newTheme);
     showToast(t(newTheme === "light" ? "themeLight" : "themeDark"));
