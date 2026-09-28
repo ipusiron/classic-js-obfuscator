@@ -1,0 +1,13 @@
+{
+  "name": "classic-js-obfuscator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Educational classical-cipher JavaScript obfuscation playground",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
