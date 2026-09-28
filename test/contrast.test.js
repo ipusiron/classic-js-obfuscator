@@ -178,6 +178,22 @@ test("hover and disabled controls do not dim their verified text contrast", () =
   assert.equal(declarations(".footer a:hover").opacity, "1");
 });
 
+test("quiz and comparison text, borders and keyboard focus meet contrast thresholds in both themes", () => {
+  for (const theme of ["light", "dark"]) {
+    const variables = palette(theme);
+    const background = color(variables["--input-bg"]);
+    for (const selector of [".quiz-choice", ".context-token"]) {
+      checkPair(selector, declarations(selector).color, [background], variables);
+    }
+    for (const selector of [".quiz-choice", ".quiz-choices", ".reference-panel textarea", "#share-url"]) {
+      const border = color(resolve(declarations(selector)["border-color"], variables));
+      assert.ok(ratio(border, background) >= 3, `${theme} ${selector} border`);
+    }
+    assert.ok(ratio(color(variables["--accent-2"]), background) >= 3, `${theme} focus and mismatch marker`);
+    assert.equal(declarations(".quiz-choice:focus-within").outline, "3px solid var(--accent-2)");
+  }
+});
+
 test("theme colors change together without low-contrast intermediate transition colors", () => {
   for (const [selector, actual] of rules) {
     if (!actual.transition) continue;

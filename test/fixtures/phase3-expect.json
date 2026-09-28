@@ -1,0 +1,1448 @@
+{
+  "schemaVersion": 1,
+  "questions": [
+    {
+      "id": "basic-shift",
+      "sampleId": "basic",
+      "prompt": {
+        "ja": "A\u3092\u93753\u3067\u30b7\u30d5\u30c8\u3059\u308b\u3068\uff1f",
+        "en": "What does A become with shift 3?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "C",
+            "en": "C"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "D",
+            "en": "D"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "E",
+            "en": "E"
+          }
+        }
+      ],
+      "answerId": "b",
+      "explanation": {
+        "ja": "ASCII\u306eA\u30923\u3060\u3051\u9032\u3081\u308b\u3068D\u3067\u3059\u3002",
+        "en": "Shifting ASCII A forward by 3 produces D."
+      },
+      "evidence": {
+        "type": "shift",
+        "input": "A",
+        "shift": 3,
+        "expected": "D"
+      }
+    },
+    {
+      "id": "basic-range",
+      "sampleId": "basic",
+      "prompt": {
+        "ja": "\u30b7\u30d5\u30c8\u5bfe\u8c61\u306eASCII\u7bc4\u56f2\u306b\u542b\u307e\u308c\u308b\u6587\u5b57\u6570\u306f\uff1f",
+        "en": "How many characters are in the shifted ASCII range?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "94",
+            "en": "94"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "95",
+            "en": "95"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "96",
+            "en": "96"
+          }
+        }
+      ],
+      "answerId": "b",
+      "explanation": {
+        "ja": "32\u304b\u3089126\u307e\u3067\u3092\u4e21\u7aef\u542b\u3081\u3066\u6570\u3048\u307e\u3059\u3002",
+        "en": "Count code points 32 through 126, including both ends."
+      },
+      "evidence": {
+        "type": "range",
+        "expected": 95
+      }
+    },
+    {
+      "id": "wrap-space",
+      "sampleId": "ascii-wrap",
+      "prompt": {
+        "ja": "\u7a7a\u767d\u3092\u937594\u3067\u30b7\u30d5\u30c8\u3059\u308b\u3068\uff1f",
+        "en": "What does a space become with shift 94?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "~",
+            "en": "~"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "}",
+            "en": "}"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "\u7a7a\u767d",
+            "en": "Space"
+          }
+        }
+      ],
+      "answerId": "a",
+      "explanation": {
+        "ja": "\u5bfe\u8c61\u7bc4\u56f2\u5185\u3067\u7a7a\u767d\u306f\u30c1\u30eb\u30c0\u306b\u79fb\u308a\u307e\u3059\u3002",
+        "en": "Within the supported range, a space moves to a tilde."
+      },
+      "evidence": {
+        "type": "shift",
+        "input": " ",
+        "shift": 94,
+        "expected": "~"
+      }
+    },
+    {
+      "id": "wrap-tilde",
+      "sampleId": "ascii-wrap",
+      "prompt": {
+        "ja": "\u30c1\u30eb\u30c0\u3092\u93751\u3067\u30b7\u30d5\u30c8\u3059\u308b\u3068\uff1f",
+        "en": "What does a tilde become with shift 1?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "!",
+            "en": "!"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "DEL",
+            "en": "DEL"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "\u7a7a\u767d",
+            "en": "Space"
+          }
+        }
+      ],
+      "answerId": "c",
+      "explanation": {
+        "ja": "\u7bc4\u56f2\u306e\u672b\u5c3e\u304b\u3089\u5148\u982d\u306e\u7a7a\u767d\u3078\u6298\u308a\u8fd4\u3057\u307e\u3059\u3002",
+        "en": "The end of the range wraps to the initial space."
+      },
+      "evidence": {
+        "type": "shift",
+        "input": "~",
+        "shift": 1,
+        "expected": " "
+      }
+    },
+    {
+      "id": "unicode-emoji",
+      "sampleId": "unicode",
+      "prompt": {
+        "ja": "\ud83d\ude00\u306e\u30b3\u30fc\u30c9\u30dd\u30a4\u30f3\u30c8\u6570\u3068UTF-16\u5358\u4f4d\u6570\u306f\uff1f",
+        "en": "What are the code-point and UTF-16-unit counts of \ud83d\ude00?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "1 / 1",
+            "en": "1 / 1"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "1 / 2",
+            "en": "1 / 2"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "2 / 2",
+            "en": "2 / 2"
+          }
+        }
+      ],
+      "answerId": "b",
+      "explanation": {
+        "ja": "\u3053\u306e\u7d75\u6587\u5b57\u306f1\u30b3\u30fc\u30c9\u30dd\u30a4\u30f3\u30c8\u3067\u3001UTF-16\u3067\u306f2\u5358\u4f4d\u3067\u3059\u3002",
+        "en": "This emoji is one code point and two UTF-16 code units."
+      },
+      "evidence": {
+        "type": "size",
+        "input": "\ud83d\ude00",
+        "expected": [
+          1,
+          2,
+          4
+        ]
+      }
+    },
+    {
+      "id": "unicode-combining",
+      "sampleId": "unicode",
+      "prompt": {
+        "ja": "e\u3068U+0301\u3092\u93753\u3067\u30b7\u30d5\u30c8\u3059\u308b\u3068\u3001\u3069\u3061\u3089\u304c\u5909\u308f\u308b\uff1f",
+        "en": "When e followed by U+0301 is shifted by 3, which part changes?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "\u4e21\u65b9",
+            "en": "Both"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "\u7d50\u5408\u30a2\u30af\u30bb\u30f3\u30c8\u3060\u3051",
+            "en": "Only the combining accent"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "e\u3060\u3051",
+            "en": "Only e"
+          }
+        }
+      ],
+      "answerId": "c",
+      "explanation": {
+        "ja": "ASCII\u306ee\u3060\u3051\u304ch\u3078\u79fb\u308a\u3001U+0301\u306f\u305d\u306e\u307e\u307e\u3067\u3059\u3002",
+        "en": "Only ASCII e becomes h; U+0301 passes through unchanged."
+      },
+      "evidence": {
+        "type": "shift",
+        "input": "e\u0301",
+        "shift": 3,
+        "expected": "h\u0301"
+      }
+    },
+    {
+      "id": "escapes-zero",
+      "sampleId": "escapes",
+      "prompt": {
+        "ja": "\u93750\u306a\u3089\u6587\u5b57\u5217\u306e\u30a8\u30b9\u30b1\u30fc\u30d7\u306f\u4e0d\u8981\uff1f",
+        "en": "Does shift 0 remove the need for string escaping?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "\u4e0d\u8981",
+            "en": "Yes"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "\u5fc5\u8981",
+            "en": "No"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "\u82f1\u8a9e\u306a\u3089\u4e0d\u8981",
+            "en": "Not needed for English"
+          }
+        }
+      ],
+      "answerId": "b",
+      "explanation": {
+        "ja": "\u30b7\u30d5\u30c8\u304c\u306a\u304f\u3066\u3082\u5f15\u7528\u7b26\u3092\u6587\u5b57\u5217\u3078\u57cb\u3081\u8fbc\u3080\u51e6\u7406\u306f\u5fc5\u8981\u3067\u3059\u3002",
+        "en": "Even without shifting, quotes must be escaped in a string literal."
+      },
+      "evidence": {
+        "type": "escape",
+        "input": "\"",
+        "expected": "\\\""
+      }
+    },
+    {
+      "id": "escapes-lf",
+      "sampleId": "escapes",
+      "prompt": {
+        "ja": "\u6559\u6750\u30bd\u30fc\u30b9\u306e\u884c\u3092\u533a\u5207\u308b\u5b9fLF\u306f\u4f55\u500b\uff1f",
+        "en": "How many actual LF separators are in the escape sample source?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "3",
+            "en": "3"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "4",
+            "en": "4"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "5",
+            "en": "5"
+          }
+        }
+      ],
+      "answerId": "a",
+      "explanation": {
+        "ja": "4\u884c\u306e\u533a\u5207\u308a\u306f3\u500b\u3067\u3059\u3002\u6587\u5b57\u5217\u5185\u306e\u6539\u884c\u30a8\u30b9\u30b1\u30fc\u30d7\u3068\u306f\u5225\u3067\u3059\u3002",
+        "en": "Four source lines have three separators, distinct from the string's newline escape."
+      },
+      "evidence": {
+        "type": "sampleLf",
+        "expected": 3
+      }
+    },
+    {
+      "id": "console-methods",
+      "sampleId": "console",
+      "prompt": {
+        "ja": "\u3053\u306e\u6559\u6750\u304c\u4f7f\u3046\u540c\u671fconsole\u30e1\u30bd\u30c3\u30c9\u306f\u4f55\u7a2e\u985e\uff1f",
+        "en": "How many synchronous console methods does this sample use?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "3",
+            "en": "3"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "4",
+            "en": "4"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "5",
+            "en": "5"
+          }
+        }
+      ],
+      "answerId": "c",
+      "explanation": {
+        "ja": "log\u3001info\u3001warn\u3001error\u3001debug\u306e5\u7a2e\u985e\u3067\u3059\u3002",
+        "en": "It uses log, info, warn, error, and debug."
+      },
+      "evidence": {
+        "type": "sampleCalls",
+        "expected": 5
+      }
+    },
+    {
+      "id": "console-error",
+      "sampleId": "console",
+      "prompt": {
+        "ja": "\u6559\u6750\u306econsole.error\u306f\u4f8b\u5916\u3092\u6295\u3052\u308b\uff1f",
+        "en": "Does the sample's console.error call throw an exception?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "\u5fc5\u305a\u6295\u3052\u308b",
+            "en": "Always"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "\u6295\u3052\u306a\u3044",
+            "en": "No"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "\u9375\u306b\u3088\u308b",
+            "en": "Depends on the shift"
+          }
+        }
+      ],
+      "answerId": "b",
+      "explanation": {
+        "ja": "\u3053\u306e\u6559\u6750\u3067\u306f\u30ed\u30b0\u3092\u51fa\u529b\u3059\u308b\u3060\u3051\u3067\u3059\u3002throw\u3068\u306f\u533a\u5225\u3057\u307e\u3059\u3002",
+        "en": "In this sample it only logs a message; it is distinct from throw."
+      },
+      "evidence": {
+        "type": "sampleError",
+        "expected": false
+      }
+    },
+    {
+      "id": "scope-own",
+      "sampleId": "scope",
+      "prompt": {
+        "ja": "\u65b0\u3057\u3044sandbox\u3067\u6559\u6750\u3092\u5b9f\u884c\u3059\u308b\u3068\u3001phase2Local\u306fglobalThis\u306e\u81ea\u8eab\u306e\u30d7\u30ed\u30d1\u30c6\u30a3\u306b\u306a\u308b\uff1f",
+        "en": "In a fresh sandbox, does the sample make phase2Local an own property of globalThis?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "\u306a\u308b",
+            "en": "Yes"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "\u93750\u3060\u3051\u306a\u308b",
+            "en": "Only with shift 0"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "\u306a\u3089\u306a\u3044",
+            "en": "No"
+          }
+        }
+      ],
+      "answerId": "c",
+      "explanation": {
+        "ja": "var\u306f\u3053\u306e\u6559\u6750\u306eIIFE\u5185\u306b\u3042\u308a\u3001\u5916\u5074\u306eglobalThis\u306b\u306f\u516c\u958b\u3055\u308c\u307e\u305b\u3093\u3002",
+        "en": "The var is inside this sample's IIFE, not exposed on globalThis."
+      },
+      "evidence": {
+        "type": "sampleScope",
+        "expected": false
+      }
+    },
+    {
+      "id": "scope-safety",
+      "sampleId": "scope",
+      "prompt": {
+        "ja": "\u56fa\u5b9a\u5f62\u5f0f\u306e\u5fa9\u5143\u306b\u6210\u529f\u3057\u305f\u3089\u3001\u5b9f\u884c\u3057\u3066\u3082\u5b89\u5168\uff1f",
+        "en": "Does successful fixed-format restoration prove that execution is safe?"
+      },
+      "choices": [
+        {
+          "id": "a",
+          "text": {
+            "ja": "\u4fdd\u8a3c\u3057\u306a\u3044",
+            "en": "No guarantee"
+          }
+        },
+        {
+          "id": "b",
+          "text": {
+            "ja": "\u5e38\u306b\u5b89\u5168",
+            "en": "Always safe"
+          }
+        },
+        {
+          "id": "c",
+          "text": {
+            "ja": "\u93753\u306a\u3089\u5b89\u5168",
+            "en": "Safe with shift 3"
+          }
+        }
+      ],
+      "answerId": "a",
+      "explanation": {
+        "ja": "\u5f62\u5f0f\u4e00\u81f4\u3001\u6587\u5b57\u5217\u4e00\u81f4\u3001\u30b3\u30fc\u30c9\u306e\u5b89\u5168\u6027\u306f\u5225\u306e\u5224\u5b9a\u3067\u3059\u3002",
+        "en": "Format acceptance, string equality, and code safety are distinct judgments."
+      },
+      "evidence": {
+        "type": "contract",
+        "expected": "noSafetyGuarantee"
+      }
+    }
+  ],
+  "canonicalUrl": "https://ipusiron.github.io/classic-js-obfuscator/#cjo=v1&sample=unicode&key=3&lang=en&view=compare",
+  "invalidHashes": [
+    {
+      "input": "#cjo=v2&sample=basic&key=3&lang=ja&view=normal",
+      "expected": {
+        "ok": false,
+        "reason": "version"
+      }
+    },
+    {
+      "input": "#cjo=v1&sample=basic&key=003&lang=ja&view=normal",
+      "expected": {
+        "ok": false,
+        "reason": "key"
+      }
+    },
+    {
+      "input": "#cjo=v1&sample=basic&key=95&lang=ja&view=normal",
+      "expected": {
+        "ok": false,
+        "reason": "key"
+      }
+    },
+    {
+      "input": "#cjo=v1&sample=basic&key=%33&lang=ja&view=normal",
+      "expected": {
+        "ok": false,
+        "reason": "key"
+      }
+    },
+    {
+      "input": "#cjo=v1&sample=basic&key=3&lang=ja&view=normal&code=secret",
+      "expected": {
+        "ok": false,
+        "reason": "fields"
+      }
+    },
+    {
+      "input": "#cjo=v1&sample=basic&key=3&lang=ja&lang=en",
+      "expected": {
+        "ok": false,
+        "reason": "fields"
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "source": "",
+      "restored": "",
+      "expected": {
+        "ok": true,
+        "equal": true,
+        "index": null,
+        "source": null,
+        "restored": null
+      }
+    },
+    {
+      "source": "",
+      "restored": "A",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 0,
+        "source": {
+          "start": 0,
+          "total": 0,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": true,
+          "tokens": []
+        },
+        "restored": {
+          "start": 0,
+          "total": 1,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 65,
+              "atMismatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source": "A",
+      "restored": "",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 0,
+        "source": {
+          "start": 0,
+          "total": 1,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 65,
+              "atMismatch": true
+            }
+          ]
+        },
+        "restored": {
+          "start": 0,
+          "total": 0,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": true,
+          "tokens": []
+        }
+      }
+    },
+    {
+      "source": "AB\ud83d\ude00CD",
+      "restored": "AB\ud83d\ude00XD",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 3,
+        "source": {
+          "start": 0,
+          "total": 5,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 65,
+              "atMismatch": false
+            },
+            {
+              "index": 1,
+              "codePoint": 66,
+              "atMismatch": false
+            },
+            {
+              "index": 2,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 3,
+              "codePoint": 67,
+              "atMismatch": true
+            },
+            {
+              "index": 4,
+              "codePoint": 68,
+              "atMismatch": false
+            }
+          ]
+        },
+        "restored": {
+          "start": 0,
+          "total": 5,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 65,
+              "atMismatch": false
+            },
+            {
+              "index": 1,
+              "codePoint": 66,
+              "atMismatch": false
+            },
+            {
+              "index": 2,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 3,
+              "codePoint": 88,
+              "atMismatch": true
+            },
+            {
+              "index": 4,
+              "codePoint": 68,
+              "atMismatch": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source": "e\u0301",
+      "restored": "\u00e9",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 0,
+        "source": {
+          "start": 0,
+          "total": 2,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 101,
+              "atMismatch": true
+            },
+            {
+              "index": 1,
+              "codePoint": 769,
+              "atMismatch": false
+            }
+          ]
+        },
+        "restored": {
+          "start": 0,
+          "total": 1,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 233,
+              "atMismatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source": "a\r\nb",
+      "restored": "a\nb",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 1,
+        "source": {
+          "start": 0,
+          "total": 4,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 97,
+              "atMismatch": false
+            },
+            {
+              "index": 1,
+              "codePoint": 13,
+              "atMismatch": true
+            },
+            {
+              "index": 2,
+              "codePoint": 10,
+              "atMismatch": false
+            },
+            {
+              "index": 3,
+              "codePoint": 98,
+              "atMismatch": false
+            }
+          ]
+        },
+        "restored": {
+          "start": 0,
+          "total": 3,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 97,
+              "atMismatch": false
+            },
+            {
+              "index": 1,
+              "codePoint": 10,
+              "atMismatch": true
+            },
+            {
+              "index": 2,
+              "codePoint": 98,
+              "atMismatch": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source": "\ud800",
+      "restored": "\ufffd",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 0,
+        "source": {
+          "start": 0,
+          "total": 1,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 55296,
+              "atMismatch": true
+            }
+          ]
+        },
+        "restored": {
+          "start": 0,
+          "total": 1,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 65533,
+              "atMismatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source": "A\u202eB",
+      "restored": "A\u202dB",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 1,
+        "source": {
+          "start": 0,
+          "total": 3,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 65,
+              "atMismatch": false
+            },
+            {
+              "index": 1,
+              "codePoint": 8238,
+              "atMismatch": true
+            },
+            {
+              "index": 2,
+              "codePoint": 66,
+              "atMismatch": false
+            }
+          ]
+        },
+        "restored": {
+          "start": 0,
+          "total": 3,
+          "prefixOmitted": false,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 0,
+              "codePoint": 65,
+              "atMismatch": false
+            },
+            {
+              "index": 1,
+              "codePoint": 8237,
+              "atMismatch": true
+            },
+            {
+              "index": 2,
+              "codePoint": 66,
+              "atMismatch": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source": "xxxxxxxxxxxxxxxxxxxxAyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "restored": "xxxxxxxxxxxxxxxxxxxxByyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 20,
+        "source": {
+          "start": 4,
+          "total": 51,
+          "prefixOmitted": true,
+          "suffixOmitted": true,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 4,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 5,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 6,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 7,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 8,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 9,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 10,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 11,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 12,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 13,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 14,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 15,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 16,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 17,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 18,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 19,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 20,
+              "codePoint": 65,
+              "atMismatch": true
+            },
+            {
+              "index": 21,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 22,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 23,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 24,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 25,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 26,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 27,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 28,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 29,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 30,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 31,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 32,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 33,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 34,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 35,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 36,
+              "codePoint": 121,
+              "atMismatch": false
+            }
+          ]
+        },
+        "restored": {
+          "start": 4,
+          "total": 51,
+          "prefixOmitted": true,
+          "suffixOmitted": true,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 4,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 5,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 6,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 7,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 8,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 9,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 10,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 11,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 12,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 13,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 14,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 15,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 16,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 17,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 18,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 19,
+              "codePoint": 120,
+              "atMismatch": false
+            },
+            {
+              "index": 20,
+              "codePoint": 66,
+              "atMismatch": true
+            },
+            {
+              "index": 21,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 22,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 23,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 24,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 25,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 26,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 27,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 28,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 29,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 30,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 31,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 32,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 33,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 34,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 35,
+              "codePoint": 121,
+              "atMismatch": false
+            },
+            {
+              "index": 36,
+              "codePoint": 121,
+              "atMismatch": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "source": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00",
+      "restored": "\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00\ud83d\ude00x",
+      "expected": {
+        "ok": true,
+        "equal": false,
+        "index": 20,
+        "source": {
+          "start": 4,
+          "total": 20,
+          "prefixOmitted": true,
+          "suffixOmitted": false,
+          "eofAtMismatch": true,
+          "tokens": [
+            {
+              "index": 4,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 5,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 6,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 7,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 8,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 9,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 10,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 11,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 12,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 13,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 14,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 15,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 16,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 17,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 18,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 19,
+              "codePoint": 128512,
+              "atMismatch": false
+            }
+          ]
+        },
+        "restored": {
+          "start": 4,
+          "total": 21,
+          "prefixOmitted": true,
+          "suffixOmitted": false,
+          "eofAtMismatch": false,
+          "tokens": [
+            {
+              "index": 4,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 5,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 6,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 7,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 8,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 9,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 10,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 11,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 12,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 13,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 14,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 15,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 16,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 17,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 18,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 19,
+              "codePoint": 128512,
+              "atMismatch": false
+            },
+            {
+              "index": 20,
+              "codePoint": 120,
+              "atMismatch": true
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "limits": {
+    "share": 200,
+    "comparison": 2000000,
+    "radius": 16
+  }
+}

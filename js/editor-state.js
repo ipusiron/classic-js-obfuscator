@@ -3,11 +3,11 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory(require("./samples.js"));
+    module.exports = factory(require("./samples.js"), require("./share-settings.js"));
   } else {
-    root.EditorState = factory(root.Samples);
+    root.EditorState = factory(root.Samples, root.ShareSettings);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function (samples) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (samples, share) {
   "use strict";
 
   const fields = ["source", "key", "sampleId", "pristine", "sampleLanguage"];
@@ -91,5 +91,12 @@
     return update(state, sampleValues(state.sampleId, language, state.key));
   }
 
-  return Object.freeze({ create, editSource, editKey, load, clear, reset, restore, changeLanguage });
+  function applySettings(state, settings) {
+    if (!settings || !Number.isInteger(settings.shift)) throw new RangeError("settings");
+    const checked = share.create({ ...settings, rawKey: String(settings.shift) });
+    if (!checked.ok) throw new RangeError("settings");
+    return update(state, sampleValues(settings.sampleId, settings.language, String(settings.shift)), true);
+  }
+
+  return Object.freeze({ create, editSource, editKey, load, clear, reset, restore, changeLanguage, applySettings });
 });

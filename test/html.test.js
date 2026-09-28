@@ -127,6 +127,9 @@ test("scripts and styles resolve to existing local files without a build step", 
   assert.ok(sources.indexOf("js/sandbox-runner.js") < sources.indexOf("script.js"));
   assert.ok(sources.includes("js/samples.js"));
   assert.ok(sources.includes("js/editor-state.js"));
+  assert.ok(sources.includes("js/share-settings.js"));
+  assert.ok(sources.indexOf("js/samples.js") < sources.indexOf("js/share-settings.js"));
+  assert.ok(sources.indexOf("js/share-settings.js") < sources.indexOf("js/editor-state.js"));
   assert.ok(sources.indexOf("js/samples.js") < sources.indexOf("js/editor-state.js"));
   assert.ok(sources.indexOf("js/editor-state.js") < sources.indexOf("script.js"));
   assert.ok(sources.includes("js/learning-core.js"));
@@ -134,6 +137,17 @@ test("scripts and styles resolve to existing local files without a build step", 
   assert.ok(sources.indexOf("js/obfuscator-core.js") < sources.indexOf("js/learning-core.js"));
   assert.ok(sources.indexOf("js/learning-core.js") < sources.indexOf("js/learning-ui.js"));
   assert.ok(sources.indexOf("js/learning-ui.js") < sources.indexOf("script.js"));
+  for (const [dependency, consumer] of [
+    ["js/comparison-context.js", "js/learning-ui.js"],
+    ["js/quiz-data.js", "js/quiz-core.js"],
+    ["js/quiz-core.js", "js/quiz-ui.js"],
+    ["js/quiz-ui.js", "script.js"],
+    ["js/share-settings.js", "js/share-ui.js"],
+    ["js/share-ui.js", "script.js"],
+  ]) {
+    assert.ok(sources.includes(dependency) && sources.includes(consumer));
+    assert.ok(sources.indexOf(dependency) < sources.indexOf(consumer), `${dependency} before ${consumer}`);
+  }
 });
 
 test("new-window links have explicit opener and referrer protection", () => {
@@ -186,7 +200,7 @@ test("editable fields have labels, outputs are readonly, and action targets exis
   for (const element of page.elements.filter((item) => ["input", "textarea", "select"].includes(item.tag))) {
     assert.ok(labels.has(attribute(element, "id")), `missing label for ${attribute(element, "id")}`);
   }
-  for (const id of ["outputCode", "outputCodeCompare"]) assert.ok(byId(id).attributes.has("readonly"), id);
+  for (const id of ["outputCode", "outputCodeCompare", "share-url"]) assert.ok(byId(id).attributes.has("readonly"), id);
   for (const id of [
     "key", "inputCode", "inputCodeCompare", "btn-generate", "btn-run", "btn-copy", "btn-download",
     "btn-normal-view", "btn-compare-view", "normal-view", "compare-view", "help-btn", "tutorial-btn",

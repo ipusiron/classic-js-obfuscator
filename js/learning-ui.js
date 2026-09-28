@@ -3,14 +3,14 @@
   "use strict";
 
   if (typeof module === "object" && module.exports) {
-    module.exports = factory(require("./learning-core.js"));
+    module.exports = factory(require("./learning-core.js"), require("./comparison-context.js"));
   } else {
-    root.LearningUI = factory(root.LearningCore);
+    root.LearningUI = factory(root.LearningCore, root.ComparisonContext);
   }
-})(typeof globalThis !== "undefined" ? globalThis : this, function (core) {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (core, context) {
   "use strict";
 
-  function create({ document, t, getCurrentOutput = () => null }) {
+  function create({ document, t, getCurrentOutput = () => null, getCurrentSource = () => null }) {
     const ids = [
       "lab-status", "trace-count", "trace-rows", "size-rows", "size-equations", "size-wrapper",
       "size-ratios", "size-ratio-empty", "size-lone-warning", "frequency-count", "frequency-rows",
@@ -35,6 +35,11 @@
     let inspectionResult = null;
     let inspectionPhase = "empty";
     let inspectionReason = "";
+    let referenceSet = false;
+    let referenceRaw = "";
+    let referenceOrigin = "none";
+    let referenceResult = null;
+    const refNode = (id) => document.getElementById(id);
     const numericAttributes = {
       "trace-count": ["data-total", "data-shown"],
       "frequency-count": ["data-total", "data-unique", "data-shown"],
@@ -303,9 +308,93 @@
           inspector["inspect-lone-warning"].hidden = false;
         }
       }
+      renderReference();
     }
 
+    function renderExcerpt(container, excerpt) {
+      container.appendChild(element("p", "note", t("contextCount", { total: excerpt.total, shown: excerpt.tokens.length })));
+      if (excerpt.prefixOmitted) container.appendChild(element("p", "note", t("contextPrefix")));
+      const tokens = element("ol", "context-tokens");
+      tokens.setAttribute("start", String(excerpt.start + 1));
+      for (const token of excerpt.tokens) {
+        const text = (token.atMismatch ? t("contextMismatch") + " " : "") + characterLabel(String.fromCodePoint(token.codePoint));
+        const item = element("li", token.atMismatch ? "context-token context-mismatch" : "context-token", text);
+        attributes(item, { "data-index": token.index, "data-code-point": token.codePoint, "data-mismatch": token.atMismatch });
+        tokens.appendChild(item);
+      }
+      container.appendChild(tokens);
+      if (excerpt.eofAtMismatch) container.appendChild(element("p", "context-mismatch", t("contextEof")));
+      if (excerpt.suffixOmitted) container.appendChild(element("p", "note", t("contextSuffix")));
+    }
+
+    function renderReference() {
+      const overLimit = referenceRaw.length > context.LIMIT || (inspectionResult && inspectionResult.source.length > context.LIMIT);
+      const canCompare = referenceSet && inspectionPhase === "success" && !overLimit;
+      refNode("btn-reference-compare").disabled = !canCompare;
+      refNode("reference-origin").textContent = t(referenceOrigin === "loaded" ? "referenceLoaded" :
+        referenceOrigin === "manual" ? "referenceManual" : "referenceUnset");
+      refNode("reference-origin").setAttribute("data-origin", referenceOrigin);
+      for (const id of ["context-source", "context-restored"]) refNode(id).replaceChildren();
+      refNode("context-panels").hidden = true;
+      const status = refNode("reference-status");
+      attributes(status, { "data-state": "none", "data-code-point-index": "" });
+      if (overLimit) {
+        status.textContent = t("referenceTooLarge", { limit: context.LIMIT.toLocaleString("en-US") });
+        status.setAttribute("data-state", "error");
+      } else if (!referenceSet) status.textContent = t("referenceUnset");
+      else if (inspectionPhase !== "success") status.textContent = t("referenceNeedRestoration");
+      else if (!referenceResult) {
+        status.textContent = t("referencePending");
+        status.setAttribute("data-state", "pending");
+      } else if (referenceResult.equal) {
+        status.textContent = t("referenceEqual");
+        status.setAttribute("data-state", "equal");
+      } else {
+        status.textContent = t("referenceDifferent", { index: referenceResult.index + 1 });
+        attributes(status, { "data-state": "different", "data-code-point-index": referenceResult.index });
+        refNode("context-panels").hidden = false;
+        renderExcerpt(refNode("context-source"), referenceResult.source);
+        renderExcerpt(refNode("context-restored"), referenceResult.restored);
+      }
+    }
+
+    refNode("reference-input").addEventListener("input", () => {
+      referenceRaw = refNode("reference-input").value;
+      referenceSet = true;
+      referenceOrigin = "manual";
+      referenceResult = null;
+      renderReference();
+    });
+    refNode("btn-reference-load").addEventListener("click", () => {
+      const source = getCurrentSource();
+      if (typeof source !== "string") return;
+      // Keep the exact snapshot even when the textarea displays normalized newlines.
+      referenceRaw = source;
+      refNode("reference-input").value = source;
+      referenceSet = true;
+      referenceOrigin = "loaded";
+      referenceResult = null;
+      renderReference();
+    });
+    refNode("btn-reference-clear").addEventListener("click", () => {
+      referenceRaw = "";
+      refNode("reference-input").value = "";
+      referenceSet = false;
+      referenceOrigin = "none";
+      referenceResult = null;
+      renderReference();
+    });
+    refNode("btn-reference-compare").addEventListener("click", () => {
+      referenceResult = null;
+      if (referenceSet && inspectionPhase === "success") {
+        const result = context.compare(referenceRaw, inspectionResult.source);
+        if (result.ok) referenceResult = result;
+      }
+      renderReference();
+    });
+
     function resetInspection(phase) {
+      referenceResult = null;
       inspectionResult = null;
       inspectionReason = "";
       inspectionPhase = phase;
@@ -335,6 +424,7 @@
     });
 
     inspector["btn-inspect"].addEventListener("click", () => {
+      referenceResult = null;
       const result = core.inspectSnippet(inspector["inspect-input"].value);
       if (!result.ok) {
         inspectionResult = null;

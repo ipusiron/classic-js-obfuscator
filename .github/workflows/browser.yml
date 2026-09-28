@@ -1,0 +1,41 @@
+# Test-only browser checks; no deployment or runtime dependencies.
+name: Browser smoke
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Install locked test-only dependencies
+        run: >-
+          python -m pip --isolated --disable-pip-version-check install
+          --require-hashes --no-deps --retries 0 --index-url https://pypi.org/simple
+          -r test/browser/requirements.txt
+      - run: python -m pip check
+      - run: python -m playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/day042-browsers
+      - run: python -B test/browser/smoke.py
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/day042-browsers
+          BROWSER_REPORT_DIR: ${{ runner.temp }}/day042-browser-report
+      - name: Upload synthetic-case failure diagnostics only
+        if: failure()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: browser-failure
+          path: ${{ runner.temp }}/day042-browser-report
+          if-no-files-found: ignore
+          retention-days: 7

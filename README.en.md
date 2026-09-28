@@ -42,9 +42,17 @@ In-page execution takes place in a sandbox iframe isolated from the parent page.
 >
 > *The Japanese learning lab with transformation steps and the size breakdown expanded in the dark theme*
 
-> ![Japanese non-executing inspection in the light theme](assets/screenshot3.png)
+> ![Japanese mismatch context in the light theme](assets/screenshot3.png)
 >
-> *The Japanese inspector after loading and recovering the current snippet, with a match against the source captured at load time*
+> *An independent reference compared with recovered code, showing the mismatched characters and their context*
+
+> ![Japanese shared-settings preview in the light theme](assets/screenshot4.png)
+>
+> *Shared settings previewed in Japanese before explicit application*
+
+> ![English learning quiz in the dark theme](assets/en/screenshot3.png)
+>
+> *A graded Unicode question with its explanation and progress in English*
 
 ---
 
@@ -78,6 +86,9 @@ In-page execution takes place in a sandbox iframe isolated from the parent page.
 - **Non-executing inspection**: Recover a fixed-format snippet and compare it with the source captured by explicitly loading the output
 - **Sizes and character frequencies**: Show three length units, wrapper overhead, frequencies and entropy
 - **Six samples and one-step restore**: Explicitly load a sample, clear input, reset defaults or restore the previous input state
+- **Learning quiz**: Two questions per sample, twelve bilingual questions with grading and explanations
+- **Settings share URL**: Share no code; review received settings before applying them together
+- **Independent reference code**: Compare restored text and show context around its first mismatch
 
 Whitespace surrounding the key is trimmed, and leading zeroes are accepted. An empty key is distinct from shift 0.
 
@@ -220,6 +231,31 @@ Newlines within the recovered source are preserved separately from this wrapper 
 Lone surrogates can be retained in memory as JavaScript strings, but UTF-8 saving replaces them with U+FFFD.
 An in-memory recovery match therefore does not guarantee equality after saving a file.
 
+#### Reference code and mismatch context
+
+“Compare with independent reference code” is separate from the captured-source comparison above it.
+Type in the reference field or press “Load current main input”.
+After recovering the snippet without execution, press “Compare reference code” to display the result.
+Loading or typing a reference does not compare automatically.
+
+An unset reference is distinct from an empty string.
+Empty strings can be compared, but “Clear reference” returns to an unset state and disables comparison.
+Clearing the reference does not clear inspection input, restored text or the captured-source comparison.
+Editing the main input, loading a sample or applying shared settings does not change the independent reference or its result.
+Editing, reloading or clearing inspection input, or either successful or failed recovery, clears the previous independent result while preserving reference text.
+Typing the same text into the reference field also clears the previous comparison.
+
+Each compared string is limited to 2,000,000 UTF-16 code units, without trimming, Unicode normalization, newline conversion or surrogate repair.
+The first mismatch uses a one-based code-point position, with 16 code points before, the position itself and 16 after it: at most 33 tokens per side.
+EOF identifies the end of either side; omitted prefixes and suffixes and total code-point counts are distinguished.
+Control and combining characters use labels and U+ values, never written back into the compared strings.
+An exact string match does not guarantee execution safety.
+
+Loading the main input captures its exact internal string at that moment.
+The textarea displays CRLF and CR as LF without changing the captured reference.
+Editing the reference field replaces that snapshot with the field's displayed value.
+Language changes preserve the reference and mismatch position, translating descriptions only.
+
 #### Comparing sizes and character frequencies
 
 Sizes distinguish code points, JavaScript UTF-16 code units and UTF-8 bytes measured with `TextEncoder`.
@@ -290,6 +326,49 @@ Restoring an untouched sample from a different language preserves its source and
 These states and the restore point exist only in memory, never in localStorage.
 
 ---
+
+#### Learning quiz
+
+Each of the six samples has two questions, for twelve fixed questions in Japanese and English.
+Choose an option and grade it to display correctness and an explanation.
+Graded choices are locked; repeated clicks or grading cannot increase the score.
+Graded and correct counts are separate, and navigation is possible while other questions remain unanswered.
+Grading the final question does not automatically return to the first.
+
+Navigation, language or theme changes, generation, editing and sample loading preserve answers.
+“Start over” resets only the quiz, not the main editor or inspector.
+Answers exist only in this page's memory and disappear on reload.
+“Load this question's sample” replaces the main input, keeps its current key and participates in one-step restore.
+Recommended keys are informational; loading a sample does not generate or execute code.
+
+#### Sharing settings without code
+
+“Create share URL” combines the selected sample ID, key, display language and normal/comparison view.
+Even with custom main input, the selected sample is what gets shared.
+Source code, generated output, restored text, reference code, quiz answers and theme are excluded.
+The current URL's query and local file path are not inherited.
+
+This example shares the Unicode sample with shift 3, English and comparison view.
+The accepted raw key `003` becomes canonical `3` in the share URL.
+
+<!-- phase3-url:start -->
+`https://ipusiron.github.io/classic-js-obfuscator/#cjo=v1&sample=unicode&key=3&lang=en&view=compare`
+<!-- phase3-url:end -->
+
+Received settings appear only as a preview; they do not automatically replace input.
+“Apply settings” loads the sample in its specified language, sets the key and view, and clears stale output.
+Generation and execution never start automatically.
+Dismissal and browser back/forward navigation do not change the main input.
+
+The source, raw key and sample provenance from immediately before application can be restored once.
+Display language and view are not restored.
+Applying identical settings retains the existing restore point; restoring a pristine sample saved in a different language keeps its text as custom input.
+
+The shared fragment is limited to 200 UTF-16 code units, with strict version, sample ID, canonical key, language and view validation.
+Unknown fields or versions, duplicate keys and incoming keys with leading zeroes or percent encoding are rejected without changing input or settings.
+Unrelated anchors are ignored.
+Changing settings clears the generated URL; a change during asynchronous copying suppresses a stale success message.
+When clipboard permission is denied, the selected URL can be copied manually.
 
 ## ⚠️ Cautions
 
@@ -390,63 +469,118 @@ npm test
 Learning tests also cover accepted and rejected fixed formats, non-executing recovery, size decomposition, frequencies, limits, the six samples, one-step input restore, learning-result invalidation and the independent inspector.
 The new numeric tables are checked against both the fixed values in `test/fixtures/learning-expect.json` and recalculated `LearningCore` results.
 
+### Browser checks and CI
+
+The published app and Node tests have no runtime or npm dependencies.
+Only browser checks use Python Playwright, maintained alongside the twelve fixed questions, Node checks of all 2,280 shared settings and mismatch reference data.
+Additional fixed data resides in `test/fixtures/phase3-expect.json`, with SHA-256 detecting changes.
+
+`test/browser/requirements.txt` pins playwright 1.63.0, greenlet 3.5.6, pyee 13.0.1 and typing-extensions 4.16.0 using wheel SHA-256 hashes.
+Supported test environments are Windows CPython 3.10 x64 and Linux CPython 3.12 x64.
+Keep the venv, matching browsers and test reports outside this repository.
+For example, run these commands from the repository root in a POSIX environment:
+
+```sh
+python3.12 -m venv ../day042-browser-venv
+export PLAYWRIGHT_BROWSERS_PATH="$(cd .. && pwd)/day042-browsers"
+export BROWSER_REPORT_DIR="$(cd .. && pwd)/day042-browser-report"
+../day042-browser-venv/bin/python -m pip --isolated --disable-pip-version-check install --require-hashes --no-deps --retries 0 --index-url https://pypi.org/simple -r test/browser/requirements.txt
+../day042-browser-venv/bin/python -m pip check
+../day042-browser-venv/bin/python -m playwright install chromium
+../day042-browser-venv/bin/python -B test/browser/smoke.py --full
+```
+
+On Windows, create the venv with Python 3.10 and use `Scripts/python.exe` and PowerShell environment variables.
+If Linux requires browser OS dependencies, ask the environment administrator to follow the official installation procedure.
+CI uses `install --with-deps chromium` only inside a disposable Ubuntu runner.
+
+The default browser suite covers HTTP/file, Japanese/English, light/dark and 320/1280px: sixteen cases.
+`--full` adds 390/768px, increasing this to thirty-two cases.
+Four storage-read/write-denial cases, four initial share-preview cases and twelve initial-theme cases are checked separately.
+An external script applies the saved theme before CSS to avoid switching themes while the main script loads.
+Small widths use mobile contexts; external requests are blocked and the real clipboard is never overwritten.
+Result JSON is saved to the specified report directory.
+
+GitHub Actions runs these browser checks separately from the existing Node job on pushes and pull requests.
+Failure artifacts contain only synthetic-case diagnostics and are retained for seven days.
+They do not collect users' input, profiles or environment-variable listings.
+Chromium automation does not replace checks in other browsers or on real devices.
+
 ## 📁 Directory structure
 
-Each line is a path relative to the project root.
+The tree shows parent-child relationships. Entries ending in `/` are directories.
 
 <!-- inventory:start -->
 ```text
 classic-js-obfuscator/               # Project root
-.github/                             # GitHub configuration
-.github/workflows/                   # Automated test workflows
-.github/workflows/test.yml           # Run Node.js 22 tests on pushes and pull requests
-.gitignore                           # Exclude personal configuration
-.nojekyll                            # Disable Jekyll processing on GitHub Pages
-CLAUDE.md                            # Development structure and working rules
-LICENSE                              # MIT license
-README.md                            # Japanese features and usage
-README.en.md                         # Complete English version
-SECURITY.md                          # Limits of obfuscation and defensive detection
-assets/                              # Application screenshots
-assets/en/                           # English-language screenshots
-assets/en/screenshot.png             # English normal view in the light theme
-assets/en/screenshot2.png            # English learning lab in the light theme
-assets/screenshot.png                # Japanese normal view in the light theme
-assets/screenshot2.png               # Japanese learning lab in the dark theme
-assets/screenshot3.png               # Japanese non-executing recovery in the light theme
-index.html                           # Interface structure and parent CSP
-js/                                  # Shared modules
-js/editor-state.js                   # Input provenance and one-step restore
-js/i18n.js                           # Japanese/English messages and language preferences
-js/learning-core.js                  # Non-executing inspection, traces, sizes and frequencies
-js/learning-ui.js                    # Learning views, invalidation and the independent inspector
-js/obfuscator-core.js                # DOM-independent transformation, validation and statistics
-js/samples.js                        # Six bilingual samples with stable IDs
-js/sandbox-runner.js                 # Frame lifecycle and message validation
-package.json                         # Dependency-free test commands
-sandbox/                             # Isolated execution document and scripts
-sandbox/runner.css                   # Isolated output styles
-sandbox/runner.html                  # Execution document with its own CSP
-sandbox/runner.js                    # Isolated execution, logs and error reporting
-script.js                            # Interface events and state updates
-style.css                            # Styles for languages, themes and viewport sizes
-test/                                # Node.js built-in tests
-test/contrast.test.js                # Light/dark color contrast
-test/core.test.js                    # Known answers, round trips, keys and statistics
-test/editor-state.test.js            # Sample, language and restore state transitions
-test/fixtures/                       # Fixed reference data
-test/fixtures/expect.json            # Reference outputs and known answers
-test/fixtures/learning-expect.json   # Fixed reference values for learning helpers
-test/format.test.js                  # UTF-8, line lengths and readable formatting
-test/html.test.js                    # CSP, HTML, ARIA and local assets
-test/i18n.test.js                    # Language dictionaries and display parity
-test/learning-core.test.js           # Non-executing inspection and pure learning helpers
-test/readme.test.js                  # Examples, statistics, metadata and document structure
-test/samples.test.js                 # Fixed sample data, syntax and benign behavior
-test/sandbox.test.js                 # Isolation and message validation
-test/security.test.js                # Detection patterns, statistics and entropy consistency
-test/snippet.test.js                 # Execution, escaping and scope
-test/ui.test.js                      # Clipboard waits and interface state changes
+├── .github/                         # GitHub configuration
+│   └── workflows/                   # Automated test workflows
+│       ├── browser.yml              # Hash-locked browser test workflow
+│       └── test.yml                 # Run Node.js 22 tests on pushes and pull requests
+├── .gitignore                       # Exclude personal configuration
+├── .nojekyll                        # Disable Jekyll processing on GitHub Pages
+├── assets/                          # Application screenshots
+│   ├── en/                          # English-language screenshots
+│   │   ├── screenshot.png           # English normal view in the light theme
+│   │   ├── screenshot2.png          # English learning lab in the light theme
+│   │   └── screenshot3.png          # English learning quiz in the dark theme
+│   ├── screenshot.png               # Japanese normal view in the light theme
+│   ├── screenshot2.png              # Japanese learning lab in the dark theme
+│   ├── screenshot3.png              # Japanese mismatch context in the light theme
+│   └── screenshot4.png              # Japanese shared-settings preview in the light theme
+├── CLAUDE.md                        # Development structure and working rules
+├── index.html                       # Interface structure and parent CSP
+├── js/                              # Shared modules
+│   ├── comparison-context.js        # Exact mismatch position and surrounding context
+│   ├── editor-state.js              # Input provenance and one-step restore
+│   ├── i18n.js                      # Japanese/English messages and language preferences
+│   ├── learning-core.js             # Non-executing inspection, traces, sizes and frequencies
+│   ├── learning-ui.js               # Learning views, invalidation and the independent inspector
+│   ├── obfuscator-core.js           # DOM-independent transformation, validation and statistics
+│   ├── quiz-core.js                 # Quiz scoring, navigation and progress
+│   ├── quiz-data.js                 # Twelve fixed bilingual questions
+│   ├── quiz-ui.js                   # Quiz controls and bilingual rendering
+│   ├── samples.js                   # Six bilingual samples with stable IDs
+│   ├── sandbox-runner.js            # Frame lifecycle and message validation
+│   ├── share-settings.js            # Code-free shared settings grammar
+│   ├── share-ui.js                  # Share URL creation and explicit application
+│   └── theme-init.js                # Apply the saved theme before first paint
+├── LICENSE                          # MIT license
+├── package.json                     # Dependency-free test commands
+├── README.en.md                     # Complete English version
+├── README.md                        # Japanese features and usage
+├── sandbox/                         # Isolated execution document and scripts
+│   ├── runner.css                   # Isolated output styles
+│   ├── runner.html                  # Execution document with its own CSP
+│   └── runner.js                    # Isolated execution, logs and error reporting
+├── script.js                        # Interface events and state updates
+├── SECURITY.md                      # Limits of obfuscation and defensive detection
+├── style.css                        # Styles for languages, themes and viewport sizes
+└── test/                            # Node.js built-in tests
+    ├── browser/                     # Self-contained browser tests
+    │   ├── requirements.txt         # Pinned versions and wheel hashes
+    │   └── smoke.py                 # HTTP, file, language and theme regression checks
+    ├── comparison.test.js           # Context excerpts and string limits
+    ├── contrast.test.js             # Light/dark color contrast
+    ├── core.test.js                 # Known answers, round trips, keys and statistics
+    ├── editor-state.test.js         # Sample, language and restore state transitions
+    ├── fixtures/                    # Fixed reference data
+    │   ├── expect.json              # Reference outputs and known answers
+    │   ├── learning-expect.json     # Fixed reference values for learning helpers
+    │   └── phase3-expect.json       # Immutable Phase 3 reference data
+    ├── format.test.js               # UTF-8, line lengths and readable formatting
+    ├── html.test.js                 # CSP, HTML, ARIA and local assets
+    ├── i18n.test.js                 # Language dictionaries and display parity
+    ├── learning-core.test.js        # Non-executing inspection and pure learning helpers
+    ├── quiz.test.js                 # Question fixtures and grading state
+    ├── readme.test.js               # Examples, statistics, metadata and document structure
+    ├── samples.test.js              # Fixed sample data, syntax and benign behavior
+    ├── sandbox.test.js              # Isolation and message validation
+    ├── security.test.js             # Detection patterns, statistics and entropy consistency
+    ├── share.test.js                # Share URL grammar and atomic apply
+    ├── snippet.test.js              # Execution, escaping and scope
+    ├── theme.test.js                # Initial theme and unavailable storage checks
+    └── ui.test.js                   # Clipboard waits and interface state changes
 ```
 <!-- inventory:end -->
 

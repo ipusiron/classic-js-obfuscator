@@ -85,6 +85,7 @@ function createUI({ clipboard, fallbackThrows = false } = {}) {
   }
   node("normal-view").classList.add("active");
   const window = {
+    location: { hash: "" },
     addEventListener(name, handler) { windowListeners.set(name, handler); }
   };
   class SandboxRunner {
@@ -97,6 +98,7 @@ function createUI({ clipboard, fallbackThrows = false } = {}) {
     ObfuscatorI18n: {
       messages: i18n.messages,
       get language() { return language; },
+      setLanguage(next) { changeLanguage(next); },
       t(key, params = {}) {
         return i18n.messages[language][key].replace(/\{([a-zA-Z]+)\}/g, (_, name) => params[name] ?? "");
       }
@@ -104,6 +106,8 @@ function createUI({ clipboard, fallbackThrows = false } = {}) {
     Samples: samples,
     EditorState: editor,
     LearningUI: learning,
+    QuizUI: require("../js/quiz-ui.js"),
+    ShareUI: require("../js/share-ui.js"),
     SandboxRunner,
     document,
     window,
@@ -141,7 +145,11 @@ function createUI({ clipboard, fallbackThrows = false } = {}) {
     language = next;
     windowListeners.get("languagechange")();
   }
-  return { node, click, input, changeLanguage, generate, invalidate, clipboardValues, fallbackValues, runCount: () => executions };
+  function hash(value, dispatch = true) {
+    window.location.hash = value;
+    if (dispatch) windowListeners.get("hashchange")();
+  }
+  return { node, click, input, hash, changeLanguage, generate, invalidate, clipboardValues, fallbackValues, runCount: () => executions };
 }
 
 for (const mutation of ["key", "language"]) {
@@ -166,6 +174,137 @@ for (const mutation of ["key", "language"]) {
     });
   }
 }
+
+test("shared settings remain pending, apply atomically and restore pre-apply raw input", () => {
+  const ui = createUI();
+  ui.input("inputCode", "custom before sharing");
+  ui.input("key", "invalid");
+  ui.hash("#cjo=v1&sample=unicode&key=94&lang=en&view=compare");
+  assert.equal(ui.node("share-pending").hidden, false);
+  assert.equal(ui.node("inputCode").value, "custom before sharing");
+  assert.equal(ui.node("key").value, "invalid");
+  ui.click("btn-share-apply");
+  assert.equal(ui.node("inputCode").value, samples.get("unicode", "en").source);
+  assert.equal(ui.node("inputCodeCompare").value, ui.node("inputCode").value);
+  assert.equal(ui.node("key").value, "94");
+  assert.equal(ui.node("btn-compare-view").attributes["aria-pressed"], "true");
+  assert.equal(ui.node("share-pending").hidden, true);
+  ui.generate();
+  ui.hash("#cjo=v1&sample=unicode&key=94&lang=en&view=compare");
+  ui.click("btn-share-apply");
+  assert.equal(ui.node("outputCode").value, "");
+  ui.click("btn-restore-input");
+  assert.equal(ui.node("inputCode").value, "custom before sharing");
+  assert.equal(ui.node("key").value, "invalid");
+  assert.equal(ui.node("btn-compare-view").attributes["aria-pressed"], "true");
+  assert.equal(ui.node("btn-generate").disabled, true);
+  assert.equal(ui.runCount(), 0);
+});
+
+test("invalid, dismissed and superseded fragments cannot silently apply settings", () => {
+  const ui = createUI();
+  const before = ui.node("inputCode").value;
+  const valid = "#cjo=v1&sample=unicode&key=3&lang=en&view=compare";
+  ui.hash(valid);
+  ui.click("btn-share-dismiss");
+  ui.click("btn-share-apply");
+  assert.equal(ui.node("inputCode").value, before);
+  ui.hash(valid);
+  ui.hash(valid + "&code=NEVER_DISPLAY", false);
+  ui.click("btn-share-apply");
+  assert.equal(ui.node("share-pending").hidden, true);
+  assert.equal(ui.node("share-error").textContent, i18n.messages.ja.shareInvalid);
+  assert.doesNotMatch(ui.node("share-error").textContent, /NEVER_DISPLAY/);
+  assert.equal(ui.node("inputCode").value, before);
+  assert.equal(ui.node("btn-restore-input").disabled, true);
+  ui.hash("#another-anchor");
+  assert.equal(ui.node("share-error").textContent, "");
+});
+
+for (const resolution of ["resolve", "reject"]) {
+  test(`shared URL copy ${resolution} is ignored after settings change`, async () => {
+    const pending = deferred();
+    const ui = createUI({ clipboard: pending.promise });
+    ui.input("inputCode", "NEVER_SHARE");
+    ui.node("sample-select").value = "unicode";
+    ui.input("key", "003");
+    ui.click("btn-share-create");
+    const url = ui.node("share-url").value;
+    assert.equal(url, "https://ipusiron.github.io/classic-js-obfuscator/#cjo=v1&sample=unicode&key=3&lang=ja&view=normal");
+    const operation = ui.click("btn-share-copy");
+    ui.click("btn-compare-view");
+    assert.equal(ui.node("share-url").value, "");
+    if (resolution === "resolve") pending.resolve();
+    else pending.reject(new Error("Denied"));
+    await operation;
+    assert.equal(ui.node("share-status").textContent, "");
+    assert.equal(ui.node("btn-share-copy").disabled, true);
+    assert.deepEqual(ui.clipboardValues, [url]);
+    assert.deepEqual(ui.fallbackValues, []);
+  });
+}
+
+test("shared URL copy rejection selects only the code-free URL for manual copying", async () => {
+  const ui = createUI();
+  ui.click("btn-share-create");
+  await ui.click("btn-share-copy");
+  assert.equal(ui.node("share-status").textContent, i18n.messages.ja.shareCopyManual);
+  assert.equal(ui.node("inputCode").value, samples.get("basic", "ja").source);
+  assert.equal(ui.runCount(), 0);
+});
+
+test("quiz preserves selected and graded answers through navigation, language and editor operations", () => {
+  const ui = createUI();
+  ui.node("quiz-choice-b").checked = true;
+  ui.node("quiz-choice-b").listeners.get("change")();
+  ui.click("btn-quiz-next");
+  ui.changeLanguage("en");
+  ui.click("btn-quiz-prev");
+  assert.equal(ui.node("quiz-choice-b").checked, true);
+  ui.click("btn-quiz-grade");
+  ui.click("btn-quiz-grade");
+  assert.equal(ui.node("quiz-progress").attributes["data-correct"], "1");
+  assert.equal(ui.node("quiz-result").textContent, i18n.messages.en.quizCorrect);
+  ui.node("quiz-choice-a").checked = true;
+  ui.node("quiz-choice-a").listeners.get("change")();
+  assert.equal(ui.node("quiz-choice-b").checked, true);
+  assert.equal(ui.node("quiz-choice-a").checked, false);
+  ui.input("inputCode", "custom source");
+  ui.input("key", "003");
+  ui.generate();
+  ui.click("btn-quiz-load");
+  assert.equal(ui.node("key").value, "003");
+  assert.equal(ui.node("outputCode").value, "");
+  assert.equal(ui.node("inputCode").value, samples.get("basic", "en").source);
+  assert.equal(ui.node("quiz-progress").attributes["data-correct"], "1");
+  ui.click("btn-restore-input");
+  assert.equal(ui.node("inputCode").value, "custom source");
+  ui.click("btn-quiz-reset");
+  assert.equal(ui.node("quiz-progress").attributes["data-answered"], "0");
+  assert.equal(ui.node("quiz-explanation").hidden, true);
+  assert.equal(ui.node("btn-quiz-grade").disabled, true);
+  assert.equal(ui.node("inputCode").value, "custom source");
+  assert.equal(ui.runCount(), 0);
+});
+
+test("quiz UI visits and grades all twelve fixed questions without executing code", () => {
+  const ui = createUI();
+  const questions = require("../js/quiz-data.js");
+  ui.click("btn-quiz-grade");
+  for (const [index, question] of questions.entries()) {
+    assert.equal(ui.node("quiz-panel").attributes["data-question"], question.id);
+    const choice = ui.node("quiz-choice-" + question.answerId);
+    choice.checked = true;
+    choice.listeners.get("change")();
+    ui.click("btn-quiz-grade");
+    assert.equal(ui.node("quiz-progress").attributes["data-correct"], String(index + 1));
+    if (index < questions.length - 1) ui.click("btn-quiz-next");
+  }
+  assert.equal(ui.node("btn-quiz-next").disabled, true);
+  ui.click("btn-quiz-next");
+  assert.equal(ui.node("quiz-progress").attributes["data-answered"], "12");
+  assert.equal(ui.runCount(), 0);
+});
 
 test("clipboard rejection with unchanged output copies that output using the fallback", async () => {
   const ui = createUI();
@@ -493,6 +632,125 @@ test("all main-editor mutations preserve independent inspection input, result an
     assert.equal(ui.node("inspect-status").attributes["data-origin"], "loaded");
     assert.equal(ui.runCount(), 0);
   }
+});
+
+test("independent reference preserves captured-source comparison and distinguishes empty from unset", () => {
+  const ui = createUI();
+  ui.input("inputCode", "A😀B");
+  ui.generate();
+  ui.click("btn-inspect-load");
+  ui.click("btn-inspect");
+  assert.equal(ui.node("btn-reference-compare").disabled, true);
+  ui.input("reference-input", "A😀C");
+  assert.equal(ui.node("reference-status").attributes["data-state"], "pending");
+  ui.click("btn-reference-compare");
+  assert.equal(ui.node("inspect-comparison").attributes["data-state"], "equal");
+  assert.equal(ui.node("reference-status").attributes["data-state"], "different");
+  assert.equal(ui.node("reference-status").attributes["data-code-point-index"], "2");
+  ui.input("reference-input", "A😀C");
+  assert.equal(ui.node("context-source").children.length, 0);
+  ui.input("reference-input", "");
+  assert.equal(ui.node("btn-reference-compare").disabled, false);
+  ui.click("btn-reference-compare");
+  assert.ok(ui.node("context-source").textContent.includes("EOF"));
+  ui.click("btn-reference-clear");
+  assert.equal(ui.node("btn-reference-compare").disabled, true);
+  assert.equal(ui.node("inspect-source").textContent, "A😀B");
+  assert.equal(ui.node("inspect-comparison").attributes["data-state"], "equal");
+  ui.input("inspect-input", core.buildSnippet("", 0));
+  ui.click("btn-inspect");
+  ui.input("reference-input", "");
+  ui.click("btn-reference-compare");
+  assert.equal(ui.node("reference-status").attributes["data-state"], "equal");
+  assert.equal(ui.node("context-panels").hidden, true);
+});
+
+test("reference load keeps exact raw CRLF despite textarea normalization until a manual input event", () => {
+  const ui = createUI();
+  const raw = "A\r\nB\ud800";
+  ui.input("inputCode", raw);
+  let renderedValue = "";
+  Object.defineProperty(ui.node("reference-input"), "value", {
+    get() { return renderedValue; }, set(value) { renderedValue = value.replace(/\r\n?/g, "\n"); },
+  });
+  ui.input("inspect-input", core.buildSnippet(raw, 3));
+  ui.click("btn-inspect");
+  ui.click("btn-reference-load");
+  assert.equal(ui.node("reference-input").value, "A\nB\ud800");
+  assert.equal(ui.node("reference-origin").attributes["data-origin"], "loaded");
+  ui.click("btn-reference-compare");
+  assert.equal(ui.node("reference-status").attributes["data-state"], "equal");
+  ui.changeLanguage("en");
+  assert.equal(ui.node("reference-status").attributes["data-state"], "equal");
+  ui.input("reference-input", renderedValue);
+  ui.click("btn-reference-compare");
+  assert.equal(ui.node("reference-origin").attributes["data-origin"], "manual");
+  assert.equal(ui.node("reference-status").attributes["data-code-point-index"], "1");
+});
+
+test("every inspection mutation clears independent comparison only, retaining reference text", () => {
+  const mutations = [
+    ui => ui.input("inspect-input", ui.node("inspect-input").value),
+    ui => ui.click("btn-inspect-load"), ui => ui.click("btn-inspect-clear"), ui => ui.click("btn-inspect"),
+    ui => { ui.input("inspect-input", "invalid"); ui.click("btn-inspect"); },
+  ];
+  for (const mutate of mutations) {
+    const ui = createUI();
+    ui.generate();
+    ui.click("btn-inspect-load");
+    ui.click("btn-inspect");
+    ui.input("reference-input", "different");
+    ui.click("btn-reference-compare");
+    mutate(ui);
+    assert.equal(ui.node("reference-input").value, "different");
+    assert.notEqual(ui.node("reference-status").attributes["data-state"], "different");
+    assert.equal(ui.node("context-source").children.length, 0);
+    assert.equal(ui.node("context-panels").hidden, true);
+  }
+});
+
+test("all main mutations preserve independent comparison, including quiz load and shared settings", () => {
+  const mutations = [
+    ui => ui.input("inputCode", "other"), ui => ui.input("inputCodeCompare", "other"),
+    ui => ui.input("key", ""), ui => ui.click("btn-load-sample"), ui => ui.click("btn-clear-input"),
+    ui => ui.click("btn-reset-input"), ui => ui.click("btn-restore-input"), ui => ui.click("btn-quiz-load"),
+    ui => ui.click("btn-compare-view"), ui => ui.changeLanguage("en"),
+    ui => { ui.hash("#cjo=v1&sample=unicode&key=94&lang=en&view=compare"); ui.click("btn-share-apply"); },
+  ];
+  for (const mutate of mutations) {
+    const ui = createUI();
+    ui.input("inspect-input", core.buildSnippet("A😀B", 3));
+    ui.click("btn-inspect");
+    ui.input("reference-input", "A😀C");
+    ui.click("btn-reference-compare");
+    mutate(ui);
+    assert.equal(ui.node("reference-input").value, "A😀C");
+    assert.equal(ui.node("reference-status").attributes["data-state"], "different");
+    assert.equal(ui.node("reference-status").attributes["data-code-point-index"], "2");
+    assert.equal(ui.node("inspect-source").textContent, "A😀B");
+    assert.equal(ui.runCount(), 0);
+  }
+});
+
+test("reference limits clear prior context and display tokens neutralize control characters", () => {
+  const ui = createUI();
+  const source = "A\u202e\ud800\u0301";
+  ui.input("inspect-input", core.buildSnippet(source, 0));
+  ui.click("btn-inspect");
+  ui.input("reference-input", "A\u202d\ud800\u0301");
+  ui.click("btn-reference-compare");
+  for (const id of ["context-source", "context-restored"]) {
+    assert.doesNotMatch(ui.node(id).textContent, /[\u202d\u202e\ud800\u0301]/u);
+    assert.match(ui.node(id).textContent, /U\+D800/);
+    assert.match(ui.node(id).textContent, /U\+0301/);
+  }
+  ui.input("reference-input", "x".repeat(2_000_001));
+  assert.equal(ui.node("reference-status").attributes["data-state"], "error");
+  assert.equal(ui.node("btn-reference-compare").disabled, true);
+  ui.click("btn-reference-compare");
+  assert.equal(ui.node("context-source").children.length, 0);
+  assert.equal(ui.node("reference-input").value.length, 2_000_001);
+  assert.equal(ui.runCount(), 0);
 });
 
 test("inspection treats side-effect markers and HTML-shaped source as inert strings", () => {

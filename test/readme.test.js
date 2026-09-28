@@ -33,8 +33,11 @@ const headingPairs = [
   [3, "学習ラボの使い方", "Using the learning lab"],
   [4, "変換過程を見る", "Inspecting the transformation steps"],
   [4, "実行せずに復号を確認する", "Inspecting restoration without execution"],
+  [4, "比較用コードと不一致の前後", "Reference code and mismatch context"],
   [4, "サイズと文字頻度を比べる", "Comparing sizes and character frequencies"],
   [4, "教材と入力の復帰", "Samples and one-step input restore"],
+  [4, "学習クイズ", "Learning quiz"],
+  [4, "コードを含めない設定共有", "Sharing settings without code"],
   [2, "⚠️ 注意", "⚠️ Cautions"],
   [3, "セキュリティに関する説明", "Security explanation"],
   [2, "🔬 技術・セキュリティ解説", "🔬 Technical and security guide"],
@@ -43,6 +46,7 @@ const headingPairs = [
   [3, "v1.0で実装された主要機能", "Main features implemented in v1.0"],
   [3, "将来の拡張予定", "Future extension ideas"],
   [2, "🧪 テスト", "🧪 Tests"],
+  [3, "ブラウザー検査とCI", "Browser checks and CI"],
   [2, "📁 ディレクトリー構造", "📁 Directory structure"],
   [2, "💻 動作環境", "💻 Requirements"],
   [3, "ローカルHTTPで開く方法", "Opening a local HTTP server"],
@@ -79,6 +83,20 @@ function actualInventory(directory = "") {
 function imagePaths(source) {
   return [...source.matchAll(/!\[[^\]]*\]\(([^)\s]+)\)/g)].map((match) => match[1])
     .filter((target) => !/^(?:[a-z]+:|\/\/)/i.test(target));
+}
+
+function actualInventoryTree(directory = "", prefix = "") {
+  const children = fs.readdirSync(path.join(root, directory), { withFileTypes: true })
+    .filter((entry) => ![".git", ".claude"].includes(entry.name))
+    .sort((a, b) => a.name.localeCompare(b.name, "en"));
+  return children.flatMap((entry, index) => {
+    const last = index === children.length - 1;
+    const name = entry.name + (entry.isDirectory() ? "/" : "");
+    const label = prefix + (last ? "└── " : "├── ") + name;
+    const nested = entry.isDirectory() ?
+      actualInventoryTree(path.join(directory, entry.name), prefix + (last ? "    " : "│   ")) : [];
+    return [label, ...nested];
+  });
 }
 
 function numericRows(source, marker, count, columns) {
@@ -141,7 +159,7 @@ test("Japanese README preserves the original YAML metadata bytes, keys and block
 });
 
 test("English and Japanese READMEs retain the complete heading correspondence", () => {
-  assert.equal(headingPairs.length, 31, "the correspondence table must cover every section");
+  assert.equal(headingPairs.length, 35, "the correspondence table must cover every section");
   for (const [name, languageIndex] of [["README.md", 1], ["README.en.md", 2]]) {
     const withoutCode = documents[name].replace(/```[\s\S]*?```/g, "");
     const headings = [...withoutCode.matchAll(/^(#{1,6}) (.+)$/gm)]
@@ -197,15 +215,15 @@ for (const [name, source] of Object.entries(documents)) {
   test(`${name}: inventory describes every existing file and directory`, () => {
     const lines = codeBlock(source, "inventory", "text").split("\n");
     const entries = lines.map((line) => {
-      const match = line.match(/^(\S+) +# (\S.*)$/);
-      assert.ok(match, `every inventory line needs a path and description: ${line}`);
-      return match[1];
+      const match = line.match(/^(.+?) +# (\S.*)$/);
+      assert.ok(match, `every inventory line needs a tree entry and description: ${line}`);
+      return match[1].trimEnd();
     });
-    assert.equal(new Set(entries).size, entries.length, "inventory entries must be unique");
     assert.equal(entries[0], "classic-js-obfuscator/");
     assert.equal(new Set(lines.map((line) => line.indexOf("#"))).size, 1, "description columns must align");
     assert.ok(lines.every((line) => line.indexOf("#") === 37), "description alignment must retain the original zero-based index 37");
-    assert.deepEqual(entries.slice(1).sort(), actualInventory().sort());
+    assert.deepEqual(entries.slice(1), actualInventoryTree(), "every path, nesting level and branch connector must match disk");
+    assert.equal(entries.length - 1, actualInventory().length, "no file or directory may be omitted or duplicated");
   });
 
   test(`${name}: learning tables recalculate every size and frequency row against the fixed fixture`, () => {
@@ -238,8 +256,8 @@ for (const [name, source] of Object.entries(documents)) {
 
   test(`${name}: all relative screenshot references point to real PNG images`, () => {
     const images = imagePaths(source);
-    assert.equal(images.length, 5, "the screenshot section must reference all five images once");
-    assert.equal(new Set(images).size, 5, "screenshot references must be unique");
+    assert.equal(images.length, 7, "the screenshot section must reference all seven images once");
+    assert.equal(new Set(images).size, 7, "screenshot references must be unique");
     const captions = [...source.matchAll(/^> !\[[^\]]+\]\((assets\/[^)]+\.png)\)\n>\n> \*([^\n]+)\*$/gm)];
     assert.deepEqual(captions.map((match) => match[1]), images, "every image needs exactly one one-line caption");
     for (const image of images) {
@@ -275,4 +293,41 @@ test("documented test commands use the built-in runner without npm dependencies"
     assert.ok(source.includes("npm test"));
     assert.ok(source.includes("python -m http.server 8000 --bind 127.0.0.1"));
   }
+});
+
+test("both documents keep code-free URL and comparison limits consistent with fixed Phase 3 data", () => {
+  const fixture = require("./fixtures/phase3-expect.json");
+  const share = require("../js/share-settings.js");
+  const comparison = require("../js/comparison-context.js");
+  for (const source of Object.values(documents)) {
+    assert.equal(marked(source, "phase3-url"), "`" + fixture.canonicalUrl + "`");
+    assert.equal(share.parse(new URL(fixture.canonicalUrl).hash).ok, true);
+    for (const count of [share.LIMIT, comparison.LIMIT, comparison.RADIUS, comparison.RADIUS * 2 + 1]) {
+      assert.ok(source.includes(count.toLocaleString("en-US")));
+    }
+    assert.ok(source.includes("test/browser/smoke.py --full"));
+    for (const version of ["1.63.0", "3.5.6", "13.0.1", "4.16.0"]) assert.ok(source.includes(version));
+    assert.doesNotMatch(source, /D:\\ipusiron-work|C:\\Users\\/i);
+  }
+});
+
+test("browser dependencies and Actions are pinned and the test workflow has no deployment authority", () => {
+  const requirements = fs.readFileSync(path.join(root, "test/browser/requirements.txt"));
+  assert.equal(crypto.createHash("sha256").update(requirements).digest("hex"),
+    "61459da606b42f382826dcaab2afbb34f56902a47d294d5a4778efed60b6b39e");
+  const workflow = fs.readFileSync(path.join(root, ".github/workflows/browser.yml"), "utf8");
+  const actions = [...workflow.matchAll(/uses: ([\w/-]+)@([a-f0-9]{40})/g)];
+  assert.deepEqual(actions.map((item) => item[1]), ["actions/checkout", "actions/setup-python", "actions/upload-artifact"]);
+  assert.equal((workflow.match(/uses:/g) || []).length, actions.length);
+  for (const text of ["contents: read", "persist-credentials: false", "timeout-minutes: 15", "--require-hashes", "--no-deps"]) {
+    assert.ok(workflow.includes(text), text);
+  }
+  assert.doesNotMatch(workflow, /pull_request_target|write-all|contents: write|secrets\./);
+  assert.match(workflow, /retention-days: 7/);
+  assert.match(workflow, /python -B test\/browser\/smoke\.py/);
+  const jobEnvironment = workflow.match(/^    env:\n([\s\S]*?)^    steps:/m)?.[1];
+  assert.ok(jobEnvironment);
+  assert.doesNotMatch(jobEnvironment, /runner\./, "runner context is unavailable in job-level env");
+  assert.match(workflow, /run: python -m playwright install --with-deps chromium\n        env:\n          PLAYWRIGHT_BROWSERS_PATH:/);
+  assert.match(workflow, /run: python -B test\/browser\/smoke\.py\n        env:\n          PLAYWRIGHT_BROWSERS_PATH:/);
 });

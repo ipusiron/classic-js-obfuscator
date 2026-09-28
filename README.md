@@ -69,9 +69,17 @@ UIは2つのタブ構成になっており、現在はシーザー暗号版が�
 >
 > *日本語の学習ラボで変換過程とサイズの分解を開いたダークテーマ*
 
-> ![日本語の実行しない復号確認、ライトテーマ](assets/screenshot3.png)
+> ![日本語の復号不一致の前後表示、ライトテーマ](assets/screenshot3.png)
 >
-> *現在の生成物を読み込んで復元し、読込時の元入力との一致を確認した日本語画面*
+> *独立した比較用コードと復元結果を照合し、不一致文字と前後を表示した日本語画面*
+
+> ![日本語の共有設定プレビュー、ライトテーマ](assets/screenshot4.png)
+>
+> *共有URLの設定を適用せずに確認している日本語画面*
+
+> ![英語の学習クイズ、ダークテーマ](assets/en/screenshot3.png)
+>
+> *Unicodeの問題を採点し、解説と進捗を表示した英語画面*
 
 > ![英語の通常表示、ライトテーマ](assets/en/screenshot.png)
 >
@@ -113,6 +121,9 @@ UIは2つのタブ構成になっており、現在はシーザー暗号版が�
 - **実行しない復号確認**：固定形式の生成物を復元し、明示読込時の元入力と比較
 - **サイズと文字頻度**：3種類の長さ、ラッパーの費用、頻度とエントロピーを表示
 - **6種類の教材と一段階復帰**：教材の明示読込、入力クリア、初期化、直前の入力への復帰
+- **学習クイズ**：6教材に各2問、日英12問の採点と解説
+- **設定共有URL**：コードを含めず、受信した設定を確認してから一括適用
+- **独立した比較用コード**：復元文字列との差を、最初の不一致の前後とともに表示
 
 鍵の前後の空白は除去し、先頭の0は許可します。空欄とシフト0は区別します。
 
@@ -255,6 +266,31 @@ HTMLの`<script>`内へ貼る場合、入力由来の文字列に含まれる`<`
 孤立サロゲートはメモリ内の文字列として保持できますが、UTF-8保存時はU+FFFDへ置換されます。
 メモリ内での復元一致が、保存したファイルの一致を保証するわけではありません。
 
+#### 比較用コードと不一致の前後
+
+「任意の比較用コードとの比較」は、上の「読込時の元入力との比較」とは別の比較です。
+比較用コード欄へ入力するか、「現在の主入力を取り込む」を押してください。
+生成物を実行せずに復元したあと、「比較用コードと比較」を押すと結果を表示します。
+取込と手入力だけでは自動比較しません。
+
+比較元の未設定と空文字は区別します。
+空の文字列も比較できますが、「比較元をクリア」で未設定へ戻すと比較は無効になります。
+比較元のクリアでは、検査入力や復元結果、読込時の元入力との比較は消しません。
+主入力の編集、教材読込、設定共有の適用は、独立した比較用コードや比較結果を変更しません。
+検査欄の編集、再読込、消去、復元の成功や失敗は前の独立比較結果を消しますが、比較用コードは保持します。
+同じ文字列を比較用欄へ再入力した場合も、前の比較結果を消します。
+
+比較は各文字列2,000,000 UTF-16単位までで、空白削除、Unicode正規化、改行変換、孤立サロゲート修復は行いません。
+最初の不一致を1始まりのコードポイント位置で示し、各側の前16、該当位置、後16を最大33トークンで表示します。
+片側の末尾はEOFと示し、前後の省略と総コードポイント数も区別します。
+制御文字や結合文字はラベルとU+値で示し、その表示を比較する文字列へ書き戻しません。
+完全一致は文字列の一致であり、実行の安全性を保証しません。
+
+主入力を取り込むと、その時点の内部文字列を保持します。
+textareaはCRLFとCRをLFで表示しますが、表示のために取込時の文字列を変更しません。
+比較用欄を編集した時点で、表示欄の値を新しい比較元にします。
+言語切替は比較元や不一致位置を保ち、説明だけを翻訳します。
+
 #### サイズと文字頻度を比べる
 
 サイズはコードポイント数、JavaScriptのUTF-16単位数、`TextEncoder`で測るUTF-8バイト数を分けて表示します。
@@ -325,6 +361,49 @@ ASCII範囲のシフトは一対一の置換で、対象外の文字も保持す
 これらの状態と復帰記録はメモリ内だけに置き、localStorageへ保存しません。
 
 ---
+#### 学習クイズ
+
+6教材それぞれ2問、固定12問を日英で用意しています。
+選択肢を選んで採点すると、正誤と解説を表示します。
+採点後の選択は固定され、連打や再採点で得点は増えません。
+「採点済み」と「正答」の件数を分け、未回答の問題が残っていても前後へ移動できます。
+最終問の採点後に自動で最初へ戻ることはありません。
+
+問題移動、言語やテーマの切替、生成、入力編集、教材読込でも回答を保持します。
+「最初から」はクイズだけを初期化し、主入力や検査欄を変更しません。
+回答はこのページ内のメモリーにだけ置き、再読込すると消えます。
+「この問題の教材を読み込む」は主入力を置き換えて現在の鍵を保ち、一段階復帰の対象になります。
+推奨鍵は案内だけで、教材の読込によって生成や実行は始まりません。
+
+#### コードを含めない設定共有
+
+「共有URLを作る」は、選択欄の教材ID、鍵、表示言語、通常表示または比較モードをURLへまとめます。
+主入力が手入力でも、共有対象は選択欄の教材です。
+入力コード、生成物、復元文字列、比較用コード、クイズの解答、テーマは含めません。
+現在のURLのクエリーやローカルファイルのパスも引き継ぎません。
+
+次はUnicode教材、鍵3、英語、比較モードを共有する例です。
+通常の鍵入力で許される`003`は、共有URLでは`3`に正規化します。
+
+<!-- phase3-url:start -->
+`https://ipusiron.github.io/classic-js-obfuscator/#cjo=v1&sample=unicode&key=3&lang=en&view=compare`
+<!-- phase3-url:end -->
+
+受信した設定はプレビューに表示するだけで、入力を自動変更しません。
+「設定を適用」を押すと、指定言語の教材と鍵、表示モードを一括反映し、古い生成物を消します。
+生成や実行は自動では始まりません。
+「見送る」やブラウザーの戻る、進むでも主入力は変更しません。
+
+適用直前の本文、raw鍵、教材の由来は一段階だけ復帰できます。
+表示言語と表示モードは復帰の対象外です。
+同一設定の適用では以前の復帰記録を保ち、異なる言語で保存した未編集教材を復帰すると、本文を保持してカスタム入力として扱います。
+
+共有用hashは最大200 UTF-16単位で、版、教材ID、正規形の鍵、言語、表示モードを厳密に検査します。
+未知の項目や版、重複キー、先頭0やパーセント表記の受信鍵は拒否し、入力や設定を変えません。
+このツールの共有形式ではないアンカーは無視します。
+設定を変えると作成済みURLを消し、コピー待機中の変更では古いURLの成功通知を出しません。
+コピーを許可しない環境では、選択されたURLを手動でコピーできます。
+
 ## ⚠️ 注意
 
 - 本ツールは秘匿ではなく難読化（可読性低下）を目的とした教材である。
@@ -424,63 +503,118 @@ npm test
 学習機能では、固定形式の受理と拒否、非実行の復元、サイズの分解、頻度、上限、6教材、入力の一段階復帰、学習表示の失効、独立した復号確認欄も検査します。
 新しい数値表は`test/fixtures/learning-expect.json`の固定値と`LearningCore`の再計算結果の両方に照合します。
 
+### ブラウザー検査とCI
+
+公開アプリとNodeテストにはランタイム依存もnpm依存もありません。
+ブラウザー検査だけはPython版Playwrightを使い、固定12問、共有設定2,280通りのNode検算、不一致前後の参照データとともに保守します。
+追加の固定値は`test/fixtures/phase3-expect.json`に収録し、SHA-256で変更を検知します。
+
+`test/browser/requirements.txt`はplaywright 1.63.0、greenlet 3.5.6、pyee 13.0.1、typing-extensions 4.16.0をwheelのSHA-256付きで固定しています。
+対応環境はWindows CPython3.10 x64とLinux CPython3.12 x64です。
+venv、対応ブラウザー、検査結果はリポジトリー外に配置してください。
+たとえばPOSIX環境では、リポジトリールートで次のように実行します。
+
+```sh
+python3.12 -m venv ../day042-browser-venv
+export PLAYWRIGHT_BROWSERS_PATH="$(cd .. && pwd)/day042-browsers"
+export BROWSER_REPORT_DIR="$(cd .. && pwd)/day042-browser-report"
+../day042-browser-venv/bin/python -m pip --isolated --disable-pip-version-check install --require-hashes --no-deps --retries 0 --index-url https://pypi.org/simple -r test/browser/requirements.txt
+../day042-browser-venv/bin/python -m pip check
+../day042-browser-venv/bin/python -m playwright install chromium
+../day042-browser-venv/bin/python -B test/browser/smoke.py --full
+```
+
+WindowsではPython3.10でvenvを作り、`Scripts/python.exe`とPowerShellの環境変数設定を使います。
+ブラウザー用のOS依存が必要なLinuxでは、環境管理者が公式手順に従って導入してください。
+CIは使い捨てのUbuntu runner内でのみ`install --with-deps chromium`を実行します。
+
+既定のブラウザー検査はHTTP/file、日英、ライト/ダーク、幅320/1280pxの16条件です。
+`--full`では390/768pxを加えた32条件に増やします。
+別にStorageの読み書き拒否4条件、初回共有URLのプレビュー4条件、初回テーマ12条件を検査します。
+保存テーマはCSSより前に外部JSで反映し、メインJSの読込を待つ間のテーマ切替を防ぎます。
+小画面はモバイルコンテキストで開き、検査中は外部要求を遮断し、クリップボードを実際には上書きしません。
+結果JSONは指定した出力先へ保存します。
+
+GitHub Actionsは既存のNode検査とは別に、このブラウザー検査をpushとpull_requestで実行します。
+失敗時のartifactは合成ケースの診断だけを7日間保持します。
+利用者の入力、プロファイル、環境変数一覧を収集する機能ではありません。
+Chromiumの自動検査は、他ブラウザーや実機での確認を代替するものではありません。
+
 ## 📁 ディレクトリー構造
 
-各行はプロジェクトルートからの相対パスです。
+フォルダーの親子関係をツリーで示します。`/`で終わる項目はフォルダーです。
 
 <!-- inventory:start -->
 ```text
 classic-js-obfuscator/               # プロジェクトルート
-.github/                             # GitHub設定
-.github/workflows/                   # 自動テストの定義
-.github/workflows/test.yml           # Node.js 22でpush・pull_requestを検査
-.gitignore                           # 個人用設定の除外
-.nojekyll                            # GitHub PagesでJekyll処理を無効化
-CLAUDE.md                            # 開発構成と作業上の規則
-LICENSE                              # MITライセンス
-README.md                            # 日本語の機能説明と使い方
-README.en.md                         # 同じ内容の英語版
-SECURITY.md                          # 難読化の限界と防御・検知の説明
-assets/                              # 画面のスクリーンショット
-assets/en/                           # 英語画面の画像
-assets/en/screenshot.png             # 英語・ライトテーマの通常表示
-assets/en/screenshot2.png            # 英語・ライトテーマの学習ラボ
-assets/screenshot.png                # 日本語・ライトテーマの通常表示
-assets/screenshot2.png               # 日本語・ダークテーマの学習ラボ
-assets/screenshot3.png               # 日本語・ライトテーマの非実行復元
-index.html                           # 画面構造と親ページのCSP
-js/                                  # 共通処理のモジュール
-js/editor-state.js                   # 入力の出自と一段階の復帰
-js/i18n.js                           # 日英辞書と言語設定
-js/learning-core.js                  # 非実行の復号確認・変換過程・サイズ・頻度
-js/learning-ui.js                    # 学習表示・失効と独立した復号確認
-js/obfuscator-core.js                # DOM非依存の変換・検証・統計
-js/samples.js                        # 同一IDを持つ6教材の日英データ
-js/sandbox-runner.js                 # iframeの生成とメッセージ検証
-package.json                         # 依存なしのテスト実行設定
-sandbox/                             # 隔離実行用の文書と処理
-sandbox/runner.css                   # 隔離画面のスタイル
-sandbox/runner.html                  # 実行文書と専用CSP
-sandbox/runner.js                    # 隔離実行・ログ・例外の通知
-script.js                            # 画面操作と状態の更新
-style.css                            # 日英・テーマ・画面幅に対応するスタイル
-test/                                # Node.js標準テスト
-test/contrast.test.js                # ライト・ダークの配色比
-test/core.test.js                    # 既知解答・往復・鍵・統計
-test/editor-state.test.js            # 教材・言語・復帰の状態遷移
-test/fixtures/                       # 変更しない参照データ
-test/fixtures/expect.json            # 生成例と既知解答の期待値
-test/fixtures/learning-expect.json   # 学習機能の固定参照値
-test/format.test.js                  # UTF-8・行長・可読性
-test/html.test.js                    # CSP・HTML・ARIA・ローカル資産
-test/i18n.test.js                    # 日英辞書と表示の対応
-test/learning-core.test.js           # 復号確認と学習用の純粋処理
-test/readme.test.js                  # 生成例・統計・メタデータ・構成
-test/samples.test.js                 # 教材の固定値・構文・無害な動作
-test/sandbox.test.js                 # 隔離実行とメッセージ検証
-test/security.test.js                # 検知式・統計・エントロピーの整合性
-test/snippet.test.js                 # 生成物の実行・エスケープ・スコープ
-test/ui.test.js                      # コピー待機中の変更と画面状態
+├── .github/                         # GitHub設定
+│   └── workflows/                   # 自動テストの定義
+│       ├── browser.yml              # ハッシュ固定のブラウザーテスト
+│       └── test.yml                 # Node.js 22でpush・pull_requestを検査
+├── .gitignore                       # 個人用設定の除外
+├── .nojekyll                        # GitHub PagesでJekyll処理を無効化
+├── assets/                          # 画面のスクリーンショット
+│   ├── en/                          # 英語画面の画像
+│   │   ├── screenshot.png           # 英語・ライトテーマの通常表示
+│   │   ├── screenshot2.png          # 英語・ライトテーマの学習ラボ
+│   │   └── screenshot3.png          # 英語・ダークテーマの学習クイズ
+│   ├── screenshot.png               # 日本語・ライトテーマの通常表示
+│   ├── screenshot2.png              # 日本語・ダークテーマの学習ラボ
+│   ├── screenshot3.png              # 日本語・ライトテーマの不一致前後表示
+│   └── screenshot4.png              # 日本語・ライトテーマの共有プレビュー
+├── CLAUDE.md                        # 開発構成と作業上の規則
+├── index.html                       # 画面構造と親ページのCSP
+├── js/                              # 共通処理のモジュール
+│   ├── comparison-context.js        # 不一致位置と前後の抽出
+│   ├── editor-state.js              # 入力の出自と一段階の復帰
+│   ├── i18n.js                      # 日英辞書と言語設定
+│   ├── learning-core.js             # 非実行の復号確認・変換過程・サイズ・頻度
+│   ├── learning-ui.js               # 学習表示・失効と独立した復号確認
+│   ├── obfuscator-core.js           # DOM非依存の変換・検証・統計
+│   ├── quiz-core.js                 # 採点・問題移動・進捗の状態
+│   ├── quiz-data.js                 # 固定12問の日英データ
+│   ├── quiz-ui.js                   # クイズの操作と日英表示
+│   ├── samples.js                   # 同一IDを持つ6教材の日英データ
+│   ├── sandbox-runner.js            # iframeの生成とメッセージ検証
+│   ├── share-settings.js            # コードを含めない共有設定の文法
+│   ├── share-ui.js                  # 共有URLと受信設定の明示適用
+│   └── theme-init.js                # 初回描画前に保存テーマを反映
+├── LICENSE                          # MITライセンス
+├── package.json                     # 依存なしのテスト実行設定
+├── README.en.md                     # 同じ内容の英語版
+├── README.md                        # 日本語の機能説明と使い方
+├── sandbox/                         # 隔離実行用の文書と処理
+│   ├── runner.css                   # 隔離画面のスタイル
+│   ├── runner.html                  # 実行文書と専用CSP
+│   └── runner.js                    # 隔離実行・ログ・例外の通知
+├── script.js                        # 画面操作と状態の更新
+├── SECURITY.md                      # 難読化の限界と防御・検知の説明
+├── style.css                        # 日英・テーマ・画面幅に対応するスタイル
+└── test/                            # Node.js標準テスト
+    ├── browser/                     # 自己完結するブラウザーテスト
+    │   ├── requirements.txt         # バージョンとwheelハッシュの固定
+    │   └── smoke.py                 # HTTP・file・言語・テーマの回帰検査
+    ├── comparison.test.js           # 前後抽出と文字列上限
+    ├── contrast.test.js             # ライト・ダークの配色比
+    ├── core.test.js                 # 既知解答・往復・鍵・統計
+    ├── editor-state.test.js         # 教材・言語・復帰の状態遷移
+    ├── fixtures/                    # 変更しない参照データ
+    │   ├── expect.json              # 生成例と既知解答の期待値
+    │   ├── learning-expect.json     # 学習機能の固定参照値
+    │   └── phase3-expect.json       # 第3弾の固定参照値
+    ├── format.test.js               # UTF-8・行長・可読性
+    ├── html.test.js                 # CSP・HTML・ARIA・ローカル資産
+    ├── i18n.test.js                 # 日英辞書と表示の対応
+    ├── learning-core.test.js        # 復号確認と学習用の純粋処理
+    ├── quiz.test.js                 # 問題の固定値と採点状態
+    ├── readme.test.js               # 生成例・統計・メタデータ・構成
+    ├── samples.test.js              # 教材の固定値・構文・無害な動作
+    ├── sandbox.test.js              # 隔離実行とメッセージ検証
+    ├── security.test.js             # 検知式・統計・エントロピーの整合性
+    ├── share.test.js                # 共有URL文法と一括適用
+    ├── snippet.test.js              # 生成物の実行・エスケープ・スコープ
+    ├── theme.test.js                # 初回テーマと保存不可時の検査
+    └── ui.test.js                   # コピー待機中の変更と画面状態
 ```
 <!-- inventory:end -->
 
