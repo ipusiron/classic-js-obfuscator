@@ -1,0 +1,149 @@
+{
+ "decrypt_src_same_as_current": true,
+ "sample": "// サンプル：実行結果の欄に \"Hello Obfuscation!\" を表示する\nconsole.log(\"Hello Obfuscation!\");\nconst p = document.createElement(\"p\");\np.textContent = \"✅ 実行されました\";\ndocument.body.appendChild(p);",
+ "sample_snippet_3": "(function(){\n  const d = function(t,s){const b=32,n=95;let o=\"\";for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);if(c>=32&&c<=126){const dec=((c-b-((s%n)+n)%n+n)%n)+b;o+=String.fromCharCode(dec);}else{o+=t[i];}}return o;};\n  const enc = \"22#サンプル：実行結果の欄に#%Khoor#Reixvfdwlrq$%#を表示する\\nfrqvroh1orj+%Khoor#Reixvfdwlrq$%,>\\nfrqvw#s#@#grfxphqw1fuhdwhHohphqw+%s%,>\\ns1wh{wFrqwhqw#@#%✅#実行されました%>\\ngrfxphqw1erg|1dsshqgFklog+s,>\";\n  const sft = 3;\n  const dec = d(enc, sft);\n  (0, eval)(dec);\n})();",
+ "sample_payload_3": "22#サンプル：実行結果の欄に#%Khoor#Reixvfdwlrq$%#を表示する\nfrqvroh1orj+%Khoor#Reixvfdwlrq$%,>\nfrqvw#s#@#grfxphqw1fuhdwhHohphqw+%s%,>\ns1wh{wFrqwhqw#@#%✅#実行されました%>\ngrfxphqw1erg|1dsshqgFklog+s,>",
+ "sample_payload_3_escaped": "22#サンプル：実行結果の欄に#%Khoor#Reixvfdwlrq$%#を表示する\\nfrqvroh1orj+%Khoor#Reixvfdwlrq$%,>\\nfrqvw#s#@#grfxphqw1fuhdwhHohphqw+%s%,>\\ns1wh{wFrqwhqw#@#%✅#実行されました%>\\ngrfxphqw1erg|1dsshqgFklog+s,>",
+ "sample_stats_3": {
+  "length": 175,
+  "shifted": 146,
+  "passed": 29,
+  "snippetLength": 490,
+  "ratio": 280
+ },
+ "sample_entropy": [
+  "5.2597",
+  "5.2597"
+ ],
+ "sample_run": {
+  "logs": [
+   "Hello Obfuscation!"
+  ],
+  "appended": [
+   [
+    "p",
+    "✅ 実行されました"
+   ]
+  ]
+ },
+ "known": {
+  "hello_3": "Khoor",
+  "abc_94": "@AB~}",
+  "sp_47": "OPN",
+  "hw_47": "w5<<?O'?B<4",
+  "sample_en_3": "22#Vdpsoh=",
+  "sample_ja_3": "22#サンプル",
+  "script_close": "</script>",
+  "rot47_hw": "w6==@ (@C=5"
+ },
+ "roundtrip_fail": [],
+ "scope": {
+  "after": [
+   "function",
+   "number",
+   "undefined"
+  ],
+  "seen": [
+   "undefined",
+   "undefined",
+   "undefined",
+   "undefined"
+  ]
+ },
+ "scope_use_strict": {
+  "plain": "number",
+  "snippet": "undefined"
+ },
+ "script_close": {
+  "snippet_has_close": false,
+  "payload_line": "  const enc = \"ydu#v#@#*\\x3C/script>*>\";"
+ },
+ "comment_open": {
+  "snippet_has_comment_open": false,
+  "payload_line": "  const enc = \"ydu#v#@#*\\x3C\\x1E--*>\";"
+ },
+ "escape": {
+  "bs": "\\\\",
+  "dq": "\\\"",
+  "lt": "\\x3C",
+  "tab": "\\x09",
+  "nul": "\\x00",
+  "del": "\\x7F",
+  "ls": "\\u2028",
+  "ja": "日本"
+ },
+ "parse": {
+  "\"\"": {
+   "ok": false,
+   "reason": "empty"
+  },
+  "\" \"": {
+   "ok": false,
+   "reason": "empty"
+  },
+  "\"0\"": {
+   "ok": true,
+   "value": 0,
+   "noop": true
+  },
+  "\"3\"": {
+   "ok": true,
+   "value": 3,
+   "noop": false
+  },
+  "\" 7 \"": {
+   "ok": true,
+   "value": 7,
+   "noop": false
+  },
+  "\"94\"": {
+   "ok": true,
+   "value": 94,
+   "noop": false
+  },
+  "\"95\"": {
+   "ok": false,
+   "reason": "outOfRange"
+  },
+  "\"-1\"": {
+   "ok": false,
+   "reason": "notInteger"
+  },
+  "\"3.5\"": {
+   "ok": false,
+   "reason": "notInteger"
+  },
+  "\"1e1\"": {
+   "ok": false,
+   "reason": "notInteger"
+  },
+  "\"03\"": {
+   "ok": true,
+   "value": 3,
+   "noop": false
+  },
+  "\"abc\"": {
+   "ok": false,
+   "reason": "notInteger"
+  },
+  "\"３\"": {
+   "ok": false,
+   "reason": "notInteger"
+  }
+ },
+ "empty_stats": {
+  "length": 0,
+  "shifted": 0,
+  "passed": 0,
+  "snippetLength": 311,
+  "ratio": null
+ },
+ "security_regex_on_new": {
+  "basic": false,
+  "iife_eval": false,
+  "b64": false,
+  "decfn": true,
+  "cand_iife_indirect_eval": true,
+  "cand_decoder": true
+ }
+}
