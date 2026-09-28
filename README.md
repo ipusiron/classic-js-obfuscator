@@ -541,77 +541,77 @@ Chromiumの自動検査は、他ブラウザーや実機での確認を代替す
 
 ## 📁 ディレクトリー構造
 
-各行はプロジェクトルートからの相対パスです。
+フォルダーの親子関係をツリーで示します。`/`で終わる項目はフォルダーです。
 
 <!-- inventory:start -->
 ```text
 classic-js-obfuscator/               # プロジェクトルート
-.github/                             # GitHub設定
-.github/workflows/                   # 自動テストの定義
-.github/workflows/browser.yml        # ハッシュ固定のブラウザーテスト
-.github/workflows/test.yml           # Node.js 22でpush・pull_requestを検査
-.gitignore                           # 個人用設定の除外
-.nojekyll                            # GitHub PagesでJekyll処理を無効化
-assets/                              # 画面のスクリーンショット
-assets/en/                           # 英語画面の画像
-assets/en/screenshot.png             # 英語・ライトテーマの通常表示
-assets/en/screenshot2.png            # 英語・ライトテーマの学習ラボ
-assets/en/screenshot3.png            # 英語・ダークテーマの学習クイズ
-assets/screenshot.png                # 日本語・ライトテーマの通常表示
-assets/screenshot2.png               # 日本語・ダークテーマの学習ラボ
-assets/screenshot3.png               # 日本語・ライトテーマの不一致前後表示
-assets/screenshot4.png               # 日本語・ライトテーマの共有プレビュー
-CLAUDE.md                            # 開発構成と作業上の規則
-index.html                           # 画面構造と親ページのCSP
-js/                                  # 共通処理のモジュール
-js/comparison-context.js             # 不一致位置と前後の抽出
-js/editor-state.js                   # 入力の出自と一段階の復帰
-js/i18n.js                           # 日英辞書と言語設定
-js/learning-core.js                  # 非実行の復号確認・変換過程・サイズ・頻度
-js/learning-ui.js                    # 学習表示・失効と独立した復号確認
-js/obfuscator-core.js                # DOM非依存の変換・検証・統計
-js/quiz-core.js                      # 採点・問題移動・進捗の状態
-js/quiz-data.js                      # 固定12問の日英データ
-js/quiz-ui.js                        # クイズの操作と日英表示
-js/samples.js                        # 同一IDを持つ6教材の日英データ
-js/sandbox-runner.js                 # iframeの生成とメッセージ検証
-js/share-settings.js                 # コードを含めない共有設定の文法
-js/share-ui.js                       # 共有URLと受信設定の明示適用
-LICENSE                              # MITライセンス
-package.json                         # 依存なしのテスト実行設定
-README.en.md                         # 同じ内容の英語版
-README.md                            # 日本語の機能説明と使い方
-sandbox/                             # 隔離実行用の文書と処理
-sandbox/runner.css                   # 隔離画面のスタイル
-sandbox/runner.html                  # 実行文書と専用CSP
-sandbox/runner.js                    # 隔離実行・ログ・例外の通知
-script.js                            # 画面操作と状態の更新
-SECURITY.md                          # 難読化の限界と防御・検知の説明
-style.css                            # 日英・テーマ・画面幅に対応するスタイル
-test/                                # Node.js標準テスト
-test/browser/                        # 自己完結するブラウザーテスト
-test/browser/requirements.txt        # バージョンとwheelハッシュの固定
-test/browser/smoke.py                # HTTP・file・言語・テーマの回帰検査
-test/comparison.test.js              # 前後抽出と文字列上限
-test/contrast.test.js                # ライト・ダークの配色比
-test/core.test.js                    # 既知解答・往復・鍵・統計
-test/editor-state.test.js            # 教材・言語・復帰の状態遷移
-test/fixtures/                       # 変更しない参照データ
-test/fixtures/expect.json            # 生成例と既知解答の期待値
-test/fixtures/learning-expect.json   # 学習機能の固定参照値
-test/fixtures/phase3-expect.json     # 第3弾の固定参照値
-test/format.test.js                  # UTF-8・行長・可読性
-test/html.test.js                    # CSP・HTML・ARIA・ローカル資産
-test/i18n.test.js                    # 日英辞書と表示の対応
-test/learning-core.test.js           # 復号確認と学習用の純粋処理
-test/quiz.test.js                    # 問題の固定値と採点状態
-test/readme.test.js                  # 生成例・統計・メタデータ・構成
-test/samples.test.js                 # 教材の固定値・構文・無害な動作
-test/sandbox.test.js                 # 隔離実行とメッセージ検証
-test/security.test.js                # 検知式・統計・エントロピーの整合性
-test/share.test.js                   # 共有URL文法と一括適用
-test/snippet.test.js                 # 生成物の実行・エスケープ・スコープ
-test/ui.test.js                      # コピー待機中の変更と画面状態
+├── .github/                         # GitHub設定
+│   └── workflows/                   # 自動テストの定義
+│       ├── browser.yml              # ハッシュ固定のブラウザーテスト
+│       └── test.yml                 # Node.js 22でpush・pull_requestを検査
+├── .gitignore                       # 個人用設定の除外
+├── .nojekyll                        # GitHub PagesでJekyll処理を無効化
+├── assets/                          # 画面のスクリーンショット
+│   ├── en/                          # 英語画面の画像
+│   │   ├── screenshot.png           # 英語・ライトテーマの通常表示
+│   │   ├── screenshot2.png          # 英語・ライトテーマの学習ラボ
+│   │   └── screenshot3.png          # 英語・ダークテーマの学習クイズ
+│   ├── screenshot.png               # 日本語・ライトテーマの通常表示
+│   ├── screenshot2.png              # 日本語・ダークテーマの学習ラボ
+│   ├── screenshot3.png              # 日本語・ライトテーマの不一致前後表示
+│   └── screenshot4.png              # 日本語・ライトテーマの共有プレビュー
+├── CLAUDE.md                        # 開発構成と作業上の規則
+├── index.html                       # 画面構造と親ページのCSP
+├── js/                              # 共通処理のモジュール
+│   ├── comparison-context.js        # 不一致位置と前後の抽出
+│   ├── editor-state.js              # 入力の出自と一段階の復帰
+│   ├── i18n.js                      # 日英辞書と言語設定
+│   ├── learning-core.js             # 非実行の復号確認・変換過程・サイズ・頻度
+│   ├── learning-ui.js               # 学習表示・失効と独立した復号確認
+│   ├── obfuscator-core.js           # DOM非依存の変換・検証・統計
+│   ├── quiz-core.js                 # 採点・問題移動・進捗の状態
+│   ├── quiz-data.js                 # 固定12問の日英データ
+│   ├── quiz-ui.js                   # クイズの操作と日英表示
+│   ├── samples.js                   # 同一IDを持つ6教材の日英データ
+│   ├── sandbox-runner.js            # iframeの生成とメッセージ検証
+│   ├── share-settings.js            # コードを含めない共有設定の文法
+│   └── share-ui.js                  # 共有URLと受信設定の明示適用
+├── LICENSE                          # MITライセンス
+├── package.json                     # 依存なしのテスト実行設定
+├── README.en.md                     # 同じ内容の英語版
+├── README.md                        # 日本語の機能説明と使い方
+├── sandbox/                         # 隔離実行用の文書と処理
+│   ├── runner.css                   # 隔離画面のスタイル
+│   ├── runner.html                  # 実行文書と専用CSP
+│   └── runner.js                    # 隔離実行・ログ・例外の通知
+├── script.js                        # 画面操作と状態の更新
+├── SECURITY.md                      # 難読化の限界と防御・検知の説明
+├── style.css                        # 日英・テーマ・画面幅に対応するスタイル
+└── test/                            # Node.js標準テスト
+    ├── browser/                     # 自己完結するブラウザーテスト
+    │   ├── requirements.txt         # バージョンとwheelハッシュの固定
+    │   └── smoke.py                 # HTTP・file・言語・テーマの回帰検査
+    ├── comparison.test.js           # 前後抽出と文字列上限
+    ├── contrast.test.js             # ライト・ダークの配色比
+    ├── core.test.js                 # 既知解答・往復・鍵・統計
+    ├── editor-state.test.js         # 教材・言語・復帰の状態遷移
+    ├── fixtures/                    # 変更しない参照データ
+    │   ├── expect.json              # 生成例と既知解答の期待値
+    │   ├── learning-expect.json     # 学習機能の固定参照値
+    │   └── phase3-expect.json       # 第3弾の固定参照値
+    ├── format.test.js               # UTF-8・行長・可読性
+    ├── html.test.js                 # CSP・HTML・ARIA・ローカル資産
+    ├── i18n.test.js                 # 日英辞書と表示の対応
+    ├── learning-core.test.js        # 復号確認と学習用の純粋処理
+    ├── quiz.test.js                 # 問題の固定値と採点状態
+    ├── readme.test.js               # 生成例・統計・メタデータ・構成
+    ├── samples.test.js              # 教材の固定値・構文・無害な動作
+    ├── sandbox.test.js              # 隔離実行とメッセージ検証
+    ├── security.test.js             # 検知式・統計・エントロピーの整合性
+    ├── share.test.js                # 共有URL文法と一括適用
+    ├── snippet.test.js              # 生成物の実行・エスケープ・スコープ
+    └── ui.test.js                   # コピー待機中の変更と画面状態
 ```
 <!-- inventory:end -->
 

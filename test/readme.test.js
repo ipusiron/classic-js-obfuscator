@@ -85,6 +85,20 @@ function imagePaths(source) {
     .filter((target) => !/^(?:[a-z]+:|\/\/)/i.test(target));
 }
 
+function actualInventoryTree(directory = "", prefix = "") {
+  const children = fs.readdirSync(path.join(root, directory), { withFileTypes: true })
+    .filter((entry) => ![".git", ".claude"].includes(entry.name))
+    .sort((a, b) => a.name.localeCompare(b.name, "en"));
+  return children.flatMap((entry, index) => {
+    const last = index === children.length - 1;
+    const name = entry.name + (entry.isDirectory() ? "/" : "");
+    const label = prefix + (last ? "└── " : "├── ") + name;
+    const nested = entry.isDirectory() ?
+      actualInventoryTree(path.join(directory, entry.name), prefix + (last ? "    " : "│   ")) : [];
+    return [label, ...nested];
+  });
+}
+
 function numericRows(source, marker, count, columns) {
   const rows = marked(source, marker).split("\n").slice(2);
   assert.ok(rows.length > 0, `${marker}: extraction must not be empty`);
@@ -201,15 +215,15 @@ for (const [name, source] of Object.entries(documents)) {
   test(`${name}: inventory describes every existing file and directory`, () => {
     const lines = codeBlock(source, "inventory", "text").split("\n");
     const entries = lines.map((line) => {
-      const match = line.match(/^(\S+) +# (\S.*)$/);
-      assert.ok(match, `every inventory line needs a path and description: ${line}`);
-      return match[1];
+      const match = line.match(/^(.+?) +# (\S.*)$/);
+      assert.ok(match, `every inventory line needs a tree entry and description: ${line}`);
+      return match[1].trimEnd();
     });
-    assert.equal(new Set(entries).size, entries.length, "inventory entries must be unique");
     assert.equal(entries[0], "classic-js-obfuscator/");
     assert.equal(new Set(lines.map((line) => line.indexOf("#"))).size, 1, "description columns must align");
     assert.ok(lines.every((line) => line.indexOf("#") === 37), "description alignment must retain the original zero-based index 37");
-    assert.deepEqual(entries.slice(1).sort(), actualInventory().sort());
+    assert.deepEqual(entries.slice(1), actualInventoryTree(), "every path, nesting level and branch connector must match disk");
+    assert.equal(entries.length - 1, actualInventory().length, "no file or directory may be omitted or duplicated");
   });
 
   test(`${name}: learning tables recalculate every size and frequency row against the fixed fixture`, () => {

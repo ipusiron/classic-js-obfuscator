@@ -507,77 +507,77 @@ Chromium automation does not replace checks in other browsers or on real devices
 
 ## 📁 Directory structure
 
-Each line is a path relative to the project root.
+The tree shows parent-child relationships. Entries ending in `/` are directories.
 
 <!-- inventory:start -->
 ```text
 classic-js-obfuscator/               # Project root
-.github/                             # GitHub configuration
-.github/workflows/                   # Automated test workflows
-.github/workflows/browser.yml        # Hash-locked browser test workflow
-.github/workflows/test.yml           # Run Node.js 22 tests on pushes and pull requests
-.gitignore                           # Exclude personal configuration
-.nojekyll                            # Disable Jekyll processing on GitHub Pages
-assets/                              # Application screenshots
-assets/en/                           # English-language screenshots
-assets/en/screenshot.png             # English normal view in the light theme
-assets/en/screenshot2.png            # English learning lab in the light theme
-assets/en/screenshot3.png            # English learning quiz in the dark theme
-assets/screenshot.png                # Japanese normal view in the light theme
-assets/screenshot2.png               # Japanese learning lab in the dark theme
-assets/screenshot3.png               # Japanese mismatch context in the light theme
-assets/screenshot4.png               # Japanese shared-settings preview in the light theme
-CLAUDE.md                            # Development structure and working rules
-index.html                           # Interface structure and parent CSP
-js/                                  # Shared modules
-js/comparison-context.js             # Exact mismatch position and surrounding context
-js/editor-state.js                   # Input provenance and one-step restore
-js/i18n.js                           # Japanese/English messages and language preferences
-js/learning-core.js                  # Non-executing inspection, traces, sizes and frequencies
-js/learning-ui.js                    # Learning views, invalidation and the independent inspector
-js/obfuscator-core.js                # DOM-independent transformation, validation and statistics
-js/quiz-core.js                      # Quiz scoring, navigation and progress
-js/quiz-data.js                      # Twelve fixed bilingual questions
-js/quiz-ui.js                        # Quiz controls and bilingual rendering
-js/samples.js                        # Six bilingual samples with stable IDs
-js/sandbox-runner.js                 # Frame lifecycle and message validation
-js/share-settings.js                 # Code-free shared settings grammar
-js/share-ui.js                       # Share URL creation and explicit application
-LICENSE                              # MIT license
-package.json                         # Dependency-free test commands
-README.en.md                         # Complete English version
-README.md                            # Japanese features and usage
-sandbox/                             # Isolated execution document and scripts
-sandbox/runner.css                   # Isolated output styles
-sandbox/runner.html                  # Execution document with its own CSP
-sandbox/runner.js                    # Isolated execution, logs and error reporting
-script.js                            # Interface events and state updates
-SECURITY.md                          # Limits of obfuscation and defensive detection
-style.css                            # Styles for languages, themes and viewport sizes
-test/                                # Node.js built-in tests
-test/browser/                        # Self-contained browser tests
-test/browser/requirements.txt        # Pinned versions and wheel hashes
-test/browser/smoke.py                # HTTP, file, language and theme regression checks
-test/comparison.test.js              # Context excerpts and string limits
-test/contrast.test.js                # Light/dark color contrast
-test/core.test.js                    # Known answers, round trips, keys and statistics
-test/editor-state.test.js            # Sample, language and restore state transitions
-test/fixtures/                       # Fixed reference data
-test/fixtures/expect.json            # Reference outputs and known answers
-test/fixtures/learning-expect.json   # Fixed reference values for learning helpers
-test/fixtures/phase3-expect.json     # Immutable Phase 3 reference data
-test/format.test.js                  # UTF-8, line lengths and readable formatting
-test/html.test.js                    # CSP, HTML, ARIA and local assets
-test/i18n.test.js                    # Language dictionaries and display parity
-test/learning-core.test.js           # Non-executing inspection and pure learning helpers
-test/quiz.test.js                    # Question fixtures and grading state
-test/readme.test.js                  # Examples, statistics, metadata and document structure
-test/samples.test.js                 # Fixed sample data, syntax and benign behavior
-test/sandbox.test.js                 # Isolation and message validation
-test/security.test.js                # Detection patterns, statistics and entropy consistency
-test/share.test.js                   # Share URL grammar and atomic apply
-test/snippet.test.js                 # Execution, escaping and scope
-test/ui.test.js                      # Clipboard waits and interface state changes
+├── .github/                         # GitHub configuration
+│   └── workflows/                   # Automated test workflows
+│       ├── browser.yml              # Hash-locked browser test workflow
+│       └── test.yml                 # Run Node.js 22 tests on pushes and pull requests
+├── .gitignore                       # Exclude personal configuration
+├── .nojekyll                        # Disable Jekyll processing on GitHub Pages
+├── assets/                          # Application screenshots
+│   ├── en/                          # English-language screenshots
+│   │   ├── screenshot.png           # English normal view in the light theme
+│   │   ├── screenshot2.png          # English learning lab in the light theme
+│   │   └── screenshot3.png          # English learning quiz in the dark theme
+│   ├── screenshot.png               # Japanese normal view in the light theme
+│   ├── screenshot2.png              # Japanese learning lab in the dark theme
+│   ├── screenshot3.png              # Japanese mismatch context in the light theme
+│   └── screenshot4.png              # Japanese shared-settings preview in the light theme
+├── CLAUDE.md                        # Development structure and working rules
+├── index.html                       # Interface structure and parent CSP
+├── js/                              # Shared modules
+│   ├── comparison-context.js        # Exact mismatch position and surrounding context
+│   ├── editor-state.js              # Input provenance and one-step restore
+│   ├── i18n.js                      # Japanese/English messages and language preferences
+│   ├── learning-core.js             # Non-executing inspection, traces, sizes and frequencies
+│   ├── learning-ui.js               # Learning views, invalidation and the independent inspector
+│   ├── obfuscator-core.js           # DOM-independent transformation, validation and statistics
+│   ├── quiz-core.js                 # Quiz scoring, navigation and progress
+│   ├── quiz-data.js                 # Twelve fixed bilingual questions
+│   ├── quiz-ui.js                   # Quiz controls and bilingual rendering
+│   ├── samples.js                   # Six bilingual samples with stable IDs
+│   ├── sandbox-runner.js            # Frame lifecycle and message validation
+│   ├── share-settings.js            # Code-free shared settings grammar
+│   └── share-ui.js                  # Share URL creation and explicit application
+├── LICENSE                          # MIT license
+├── package.json                     # Dependency-free test commands
+├── README.en.md                     # Complete English version
+├── README.md                        # Japanese features and usage
+├── sandbox/                         # Isolated execution document and scripts
+│   ├── runner.css                   # Isolated output styles
+│   ├── runner.html                  # Execution document with its own CSP
+│   └── runner.js                    # Isolated execution, logs and error reporting
+├── script.js                        # Interface events and state updates
+├── SECURITY.md                      # Limits of obfuscation and defensive detection
+├── style.css                        # Styles for languages, themes and viewport sizes
+└── test/                            # Node.js built-in tests
+    ├── browser/                     # Self-contained browser tests
+    │   ├── requirements.txt         # Pinned versions and wheel hashes
+    │   └── smoke.py                 # HTTP, file, language and theme regression checks
+    ├── comparison.test.js           # Context excerpts and string limits
+    ├── contrast.test.js             # Light/dark color contrast
+    ├── core.test.js                 # Known answers, round trips, keys and statistics
+    ├── editor-state.test.js         # Sample, language and restore state transitions
+    ├── fixtures/                    # Fixed reference data
+    │   ├── expect.json              # Reference outputs and known answers
+    │   ├── learning-expect.json     # Fixed reference values for learning helpers
+    │   └── phase3-expect.json       # Immutable Phase 3 reference data
+    ├── format.test.js               # UTF-8, line lengths and readable formatting
+    ├── html.test.js                 # CSP, HTML, ARIA and local assets
+    ├── i18n.test.js                 # Language dictionaries and display parity
+    ├── learning-core.test.js        # Non-executing inspection and pure learning helpers
+    ├── quiz.test.js                 # Question fixtures and grading state
+    ├── readme.test.js               # Examples, statistics, metadata and document structure
+    ├── samples.test.js              # Fixed sample data, syntax and benign behavior
+    ├── sandbox.test.js              # Isolation and message validation
+    ├── security.test.js             # Detection patterns, statistics and entropy consistency
+    ├── share.test.js                # Share URL grammar and atomic apply
+    ├── snippet.test.js              # Execution, escaping and scope
+    └── ui.test.js                   # Clipboard waits and interface state changes
 ```
 <!-- inventory:end -->
 
