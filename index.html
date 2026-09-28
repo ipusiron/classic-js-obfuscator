@@ -106,6 +106,7 @@
         <p class="subtitle">古典暗号で自己復号・自己実行するJavaScriptスニペットを生成</p>
       </div>
       <div class="header-buttons">
+        <button id="language-btn" class="language-btn" aria-label="Switch language to English">EN</button>
         <button id="help-btn" class="help-btn">📖 ヘルプ</button>
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="テーマを切り替える">🌙</button>
         <button id="tutorial-btn" class="tutorial-start-btn">❓ チュートリアル</button>
@@ -134,7 +135,7 @@
           <button id="btn-copy">出力をコピー</button>
           <button id="btn-download">.js で保存</button>
         </div>
-        <p class="note">※ ASCII 32–126 のみシフト対象／それ以外（日本語など）は無変換で通過</p>
+        <p id="ascii-note" class="note">※ ASCII 32–126 のみシフト対象／それ以外（日本語など）は無変換で通過</p>
         <p id="output-status" class="note" role="status"></p>
         <p id="output-stats" class="note"></p>
         <p id="run-notice" class="note"></p>
@@ -195,12 +196,13 @@
 
   <footer>
     <div class="footer">
-      🔗 GitHubリポジトリはこちら（ <a href="https://github.com/ipusiron/classic-js-obfuscator" target="_blank" rel="noopener noreferrer">ipusiron/classic-js-obfuscator</a> ）
+      <span id="footer-label">🔗 GitHubリポジトリはこちら</span>（ <a href="https://github.com/ipusiron/classic-js-obfuscator" target="_blank" rel="noopener noreferrer">ipusiron/classic-js-obfuscator</a> ）
     </div>
   </footer>
 
   <script src="js/obfuscator-core.js"></script>
   <script src="js/sandbox-runner.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

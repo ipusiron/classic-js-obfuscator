@@ -67,7 +67,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-body { overflow-wrap: anywhere; }
+body { overflow-wrap: anywhere; min-height: 100vh; min-height: 100dvh; }
 body.dialog-open { overflow: hidden; }
 
 html, body {

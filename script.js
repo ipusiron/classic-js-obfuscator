@@ -1,5 +1,6 @@
 // Pure conversion logic is shared with the dependency-free Node tests.
 const { buildSnippet: buildObfuscatedSnippet } = ObfuscatorCore;
+const t = (key, params) => ObfuscatorI18n.t(key, params);
 
 // UI まわり
 function $(id) { return document.getElementById(id); }
@@ -32,7 +33,7 @@ function invalidateOutput() {
   $("outputCodeCompare").value = "";
   $("output-stats").textContent = "";
   for (const id of ["btn-run", "btn-copy", "btn-download"]) $(id).disabled = true;
-  $("output-status").textContent = "入力や設定を変更しました。再生成してください。";
+  $("output-status").textContent = t("stale");
 }
 
 function hasFreshOutput() {
@@ -44,29 +45,27 @@ function hasFreshOutput() {
 function init() {
   runner = new SandboxRunner({ host: $("run-host"), onResult: (result) => {
     if (result.kind === "log" || result.kind === "error") {
-      $("run-result").textContent += result.text + "\n";
+      const technicalKeys = ["unsupportedProtocol", "codeTooLarge"];
+      const message = result.kind === "error" && technicalKeys.includes(result.text) ? t(result.text) : result.text;
+      $("run-result").textContent += message + "\n";
     } else if (result.kind === "timeout") {
-      $("run-result").textContent += "実行を終了しました。時間制限を超えました。\n";
+      $("run-result").textContent += t("executionTimeout") + "\n";
     } else if (result.kind === "done") {
-      $("run-result").textContent += "実行完了\n";
+      $("run-result").textContent += t("done") + "\n";
     }
   }, onState: (state) => {
     $("btn-run").disabled = state === "running" || !hasFreshOutput() || !SandboxRunner.supported;
   } });
-  $("run-notice").textContent = SandboxRunner.supported ?
-    "信頼できるコードだけを実行してください。実行画面は毎回初期化されます。" :
-    "ファイルを直接開いた場合は実行できません。HTTPで開くと実行できます。生成・コピー・保存は利用できます。";
-  $("inputCode").value = [
-    "// サンプル：実行結果の欄に \"Hello Obfuscation!\" を表示する",
-    "console.log(\"Hello Obfuscation!\");",
-    "const p = document.createElement(\"p\");",
-    "p.textContent = \"✅ 実行されました\";",
-    "document.body.appendChild(p);",
-  ].join("\n");
+  function renderRunNotice() {
+    $("run-notice").textContent = t(SandboxRunner.supported ? "runNotice" : "fileNotice");
+  }
+  renderRunNotice();
+  $("inputCode").value = t("sample");
+  $("inputCodeCompare").value = $("inputCode").value;
   function validateKey() {
     const result = ObfuscatorCore.parseShift($("key").value);
     const message = result.ok ? "" : result.reason === "empty" ?
-      "シフト量を入力してください。" : "0〜94の整数を半角数字で入力してください。";
+      t("keyEmpty") : t("keyInvalid");
     $("key-error").textContent = message;
     $("key-error").classList.toggle("show", !result.ok);
     $("key").setAttribute("aria-invalid", String(!result.ok));
@@ -74,8 +73,20 @@ function init() {
     return result;
   }
   invalidateOutput();
-  $("output-status").textContent = "入力とシフト量を指定し、コードを生成してください。";
+  $("output-status").textContent = t("initial");
   validateKey();
+  window.addEventListener("languagechange", () => {
+    const source = $("inputCode").value;
+    if (Object.values(ObfuscatorI18n.messages).some(messages => source === messages.sample)) {
+      $("inputCode").value = t("sample");
+      $("inputCodeCompare").value = $("inputCode").value;
+    }
+    invalidateOutput();
+    validateKey();
+    renderRunNotice();
+    $("toast").textContent = "";
+    $("toast").classList.remove("show");
+  });
   $("key").addEventListener("input", () => {
     invalidateOutput();
     validateKey();
@@ -93,23 +104,28 @@ function init() {
     outputShift = result.value;
     const count = ObfuscatorCore.stats(source, snippet);
     $("output-stats").textContent =
-      `元コード ${count.length}文字 → 生成物 ${count.snippetLength}文字（文字数比 ${count.ratio ?? "—"}%）`;
+      t("stats", { ...count, ratio: count.ratio === null ? t("ratioUndefined") : count.ratio + "%" });
     $("output-status").textContent = result.noop ?
-      "シフト0は文字を変換しません。出力は現在の入力に対応しています。" : "生成しました。出力は現在の入力に対応しています。";
+      t("noop") : t("generated");
     for (const id of ["btn-copy", "btn-download"]) $(id).disabled = false;
     $("btn-run").disabled = !SandboxRunner.supported;
   });
   $("btn-copy").addEventListener("click", async () => {
     if (!hasFreshOutput()) return;
+    const copiedSnippet = $("outputCode").value;
+    const stillCurrent = () => hasFreshOutput() && $("outputCode").value === copiedSnippet;
     try {
-      await navigator.clipboard.writeText($("outputCode").value);
-      showToast("コピーしました。");
+      await navigator.clipboard.writeText(copiedSnippet);
+      if (stillCurrent()) showToast(t("copySuccess"));
     } catch {
+      // Settings or input may have changed while the permission request was pending.
+      if (!stillCurrent()) return;
       const field = $("normal-view").classList.contains("active") ? $("outputCode") : $("outputCodeCompare");
       field.focus();
       field.select();
-      if (document.execCommand("copy")) showToast("コピーしました。");
-      else showToast("コピーできませんでした。選択した出力を手動でコピーしてください。", true);
+      let copied = false;
+      try { copied = document.execCommand("copy"); } catch { /* Manual selection remains available. */ }
+      showToast(t(copied ? "copySuccess" : "copyFail"), !copied);
     }
   });
   $("btn-download").addEventListener("click", () => {
@@ -263,44 +279,14 @@ function initTutorial() {
   let currentStep = 0;
 
   const steps = [
-    {
-      element: "#inputCode",
-      title: "ようこそ！",
-      content: "<h3>📝 JavaScriptコードの入力</h3><p>ここに暗号化したいJavaScriptコードを入力します。</p><p>サンプルコードがすでに入力されているので、そのまま試すこともできます。</p>",
-      position: "right"
-    },
-    {
-      element: "#key",
-      title: "シフト量の設定",
-      content: "<h3>🔑 暗号化の鍵</h3><p>シーザー暗号のシフト量を<code>0〜94</code>の範囲で設定します。</p><p>デフォルトは<code>3</code>です。数値が大きいほど元のコードから離れた文字に変換されます。</p>",
-      position: "bottom"
-    },
-    {
-      element: "#btn-generate",
-      title: "暗号化の実行",
-      content: "<h3>🛠️ コード生成</h3><p>このボタンをクリックすると、入力したコードが暗号化されます。</p><p>生成されたコードは自己復号・自己実行可能なスニペットになります。</p>",
-      position: "bottom"
-    },
-    {
-      element: "#outputCode",
-      title: "生成結果",
-      content: "<h3>🧬 暗号化されたコード</h3><p>ここに生成された難読化コードが表示されます。</p><p>このコードは<code>&lt;script&gt;</code>タグ内にそのまま貼り付けて使用できます。</p>",
-      position: "left"
-    },
-    {
-      element: ".field.inline",
-      title: "便利な機能",
-      content: "<h3>⚡ アクション</h3><p><strong>テスト実行</strong>: 隔離した画面で動作確認</p>" +
-        "<p><strong>コピー</strong>: クリップボードにコピー</p><p><strong>保存</strong>: .jsファイルとしてダウンロード</p>",
-      position: "top"
-    },
-    {
-      element: "#btn-compare-view",
-      title: "比較モード",
-      content: "<h3>🔀 並べて表示</h3><p>このボタンで比較モードに切り替えると、元のコードと暗号化後のコードを横並びで確認できます。</p><p>違いを視覚的に確認したい時に便利です。</p>",
-      position: "bottom"
-    }
+    { element: "#inputCode", content: "tour1" },
+    { element: "#key", content: "tour2" },
+    { element: "#btn-generate", content: "tour3" },
+    { element: "#outputCode", content: "tour4" },
+    { element: ".field.inline", content: "tour5" },
+    { element: "#btn-compare-view", content: "tour6" },
   ];
+  stepText.textContent = t("step", { index: 1, total: steps.length });
 
   function showStep(index) {
     if (index < 0 || index >= steps.length) return;
@@ -309,14 +295,15 @@ function initTutorial() {
     const step = steps[index];
 
     // ステップ番号更新
-    stepText.textContent = `Step ${index + 1}/${steps.length}`;
+    stepText.textContent = t("step", { index: index + 1, total: steps.length });
 
     // コンテンツ更新
-    content.innerHTML = step.content;
+    // Only trusted, bundled translation markup is inserted here.
+    content.innerHTML = t(step.content);
 
     // ボタンの状態更新
     prevBtn.disabled = index === 0;
-    nextBtn.textContent = index === steps.length - 1 ? "完了" : "次へ";
+    nextBtn.textContent = t(index === steps.length - 1 ? "complete" : "next");
 
     const selector = step.element === "#inputCode" && $("compare-view").classList.contains("active")
       ? "#inputCodeCompare" : step.element === "#outputCode" && $("compare-view").classList.contains("active")
@@ -340,6 +327,7 @@ function initTutorial() {
   }
 
   function startTutorial() {
+    $("tab-button-caesar").click();
     openDialog(overlay, closeBtn);
     showStep(0);
   }
@@ -377,6 +365,13 @@ function initTutorial() {
     if (overlay.classList.contains("active")) showStep(currentStep);
   });
 
+  window.addEventListener("languagechange", () => {
+    stepText.textContent = t("step", { index: currentStep + 1, total: steps.length });
+    content.innerHTML = t(steps[currentStep].content);
+    nextBtn.textContent = t(currentStep === steps.length - 1 ? "complete" : "next");
+    if (overlay.classList.contains("active")) showStep(currentStep);
+  });
+
   // チュートリアルボタンのイベントリスナー
   const tutorialBtn = $("tutorial-btn");
   tutorialBtn.addEventListener("click", () => {
@@ -411,7 +406,7 @@ function initTheme() {
     const currentTheme = body.getAttribute("data-theme") === "light" ? "light" : "dark";
     const newTheme = currentTheme === "light" ? "dark" : "light";
     setTheme(newTheme);
-    showToast(`${newTheme === "light" ? "☀️ ライト" : "🌙 ダーク"}モードに切り替えました`);
+    showToast(t(newTheme === "light" ? "themeLight" : "themeDark"));
   }
 
   // 初期テーマを設定
@@ -464,7 +459,7 @@ function initHelp() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-
+  ObfuscatorI18n.init();
   init();
   initTabs();
   initViewMode();

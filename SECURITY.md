@@ -9,13 +9,14 @@
 #### 暗号化アルゴリズム
 
 ```javascript
-function caesarEncrypt(text, shift) {
+function caesarShift(text, shift) {
   const base = 32, span = 95; // ASCII可視文字範囲
+  const normalized = ((shift % span) + span) % span;
   let out = "";
   for (let i = 0; i < text.length; i++) {
     const code = text.charCodeAt(i);
     if (code >= 32 && code <= 126) {
-      const enc = ((code - base + (shift % span) + span) % span) + base;
+      const enc = ((code - base + normalized) % span) + base;
       out += String.fromCharCode(enc);
     } else {
       out += text[i]; // 範囲外はそのまま
@@ -27,33 +28,39 @@ function caesarEncrypt(text, shift) {
 
 #### 自己復号スニペットの構造
 
-生成されるコードは以下の構造を持ちます：
+生成物は即時関数（IIFE）の中に、復号関数、変換後の文字列、シフト量を持ちます。復号後のコードは`(0, eval)`という間接呼び出しで実行します。非strictコードのトップレベルの関数宣言と`var`宣言は実行先のグローバルに残り、ラッパー内の変数にはアクセスしません。`let`や`const`の宣言、`"use strict"`を含むコードは同じ扱いにはなりません。[MDNのevalの説明](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval#direct_and_indirect_eval)も参照してください。
 
-```javascript
-(function(){
-  const d = function(t,s){...}; // 復号関数（最小化済み）
-  const enc = "暗号化されたペイロード";
-  const sft = 3; // シフト量
-  const dec = d(enc, sft); // 復号実行
-  eval(dec); // 元コード実行
-})();
-```
+ブラウザー内の実行先は後述のiframeです。生成物を別のページに配置する場合は、その配置先のグローバルとCSPが適用されます。ツールの実行用sandboxが生成物に付くわけではありません。
+
+文字列リテラルに書き出す`<`は十六進エスケープにし、HTMLの閉じscriptタグやコメント開始の並びが入力由来の文字列から生じないようにします。制御文字とU+2028、U+2029もエスケープします。復号関数に含まれる比較演算子の`<`はそのままです。日本語と絵文字はシフト対象外なので、生成物でも読めます。
 
 ### 🛡️ 防御的セキュリティの観点
 
 #### このツールが教える防御技術
 
-1. **静的解析の限界**
-   - 単純な文字列置換では検知困難
-   - 動的実行時まで本来の処理が判明しない
+1. 静的解析と単純検索の違い
+   - 元コードのキーワードだけでは見つからない場合がある。
+   - シフト量と復号処理が生成物に含まれるため、実行しなくても元コードを復元できる。
 
-2. **コード混同技術**
-   - 可読性を意図的に低下させる技術
-   - 逆解析の時間コストを増大
+2. コード難読化の限界
+   - 可読性は下がるが、コードの秘密を保護する暗号としては使えない。
+   - 日本語の文字列やコメントはシフトしても変わらない。
 
-3. **自己修正コード**
-   - 実行時に自分自身を復号・変更
-   - 静的ファイル解析では元コードが不明
+3. 実行時の復号
+   - 復号した文字列を実行する構造であり、ファイルを書き換える自己修正コードではない。
+   - 復号処理と実行処理を分けて調べ、復号した内容を実行前に確認できる。
+
+### ツール内の実行とデータの扱い
+
+「この場で実行」は毎回新しい`sandbox="allow-scripts"`のiframeを作ります。`allow-same-origin`を指定しないため、同じサイトのURLから読み込んだ文書でも実行時はopaque originになり、ツール本体のDOMやlocalStorageへの直接アクセスは同一生成元ポリシーで拒否されます。親子の結果通知には`postMessage`を使い、送信元ウィンドウ、origin、実行ID、メッセージ種別を検査します。[MDNのiframeのsandbox属性](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox)を参照してください。
+
+親ページのCSPは`script-src 'self'`で動的評価を許可しません。実行用文書のCSPだけが`'unsafe-eval'`を含みます。実行用文書は`connect-src 'none'`、`form-action 'none'`、`frame-src 'none'`などで通信や機能を制限します。ただし、`connect-src`はfetchなどの接続APIを制御する指令であり、iframe自身のURL遷移まで一律に禁止する指令ではありません。**本ツールを、不審なコードを安全に分析できる環境として使わないでください。**内容を理解した信頼できるコードだけを実行してください。[MDNのconnect-srcの説明](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/connect-src)で制御対象を確認できます。
+
+結果欄には同期実行中のconsole出力と例外を文字列で表示し、consoleの一時的な差し替えは`finally`で復元します。タイマーなどによる非同期のconsole出力は捕捉しません。実行用iframeが残っている間に届いた非同期例外と未処理のPromise rejectionは報告します。「完了」は同期処理が戻ったことを示し、すべての非同期処理の終了を意味しません。
+
+コード長は200万UTF-16コード単位まで、ログと例外はそれぞれ100件まで、1件の通知は4,000UTF-16コード単位までです。応答待ちは5秒で打ち切りますが、無限ループやCPU占有を確実に停止する仕組みではありません。ブラウザーが応答しなくなった場合はタブを閉じてください。
+
+ツール本体がlocalStorageに保存するのはテーマと言語設定だけです。入力コードと生成物は保存しません。localStorageを使えなくても初期化を続けます。`file://`では生成、コピー、保存を利用でき、実行ボタンは無効になります。実行する場合はHTTPまたはHTTPSで開いてください。
 
 ## ⚠️ 攻撃者の悪用手法と対策
 
@@ -61,15 +68,7 @@ function caesarEncrypt(text, shift) {
 
 #### 🔴 マルウェア配布での悪用
 
-**攻撃手法:**
-```javascript
-// 悪意のある例（教育目的での説明）
-(function(){
-  const d = function(t,s){...};
-  const enc = "暗号化されたマルウェアコード";
-  eval(d(enc, 13)); // 復号して実行
-})();
-```
+難読化によって、コードの目的を単純な文字列検索から隠す悪用が考えられます。配布元、復号後の内容、実際の権限を確認する必要があります。難読化されているという理由だけで、コードが悪意を持つとは判断できません。
 
 **具体的な脅威:**
 - ブラウザ拡張機能への埋め込み
@@ -115,49 +114,34 @@ function caesarEncrypt(text, shift) {
 
 #### 1. パターンマッチング
 
-**基本的な正規表現:**
+以前の4種類の正規表現を現行のサンプル生成物に適用すると、3種類は一致しませんでした。改行をまたがないIIFE検査、波括弧の入れ子を扱わない検査、Base64文字列を想定した検査は、この生成物の検知に使えません。
+
+次の2種類は、参照サンプルへの一致を自動テストで確認しています。最初の式はIIFE内の間接eval呼び出し、2つ目は文字コードによる変換の候補を拾います。
+
 ```regex
-/\(function\(\)\{.*eval\(.*\)\;\}\)\(\)\;/
+/\(function\s*\(\)\s*\{[\s\S]*?\(0,\s*eval\)\([\s\S]*?\}\)\(\);/
+/charCodeAt[\s\S]{0,200}fromCharCode/
 ```
 
-**より高度な検出パターン:**
-```regex
-// IIFE + eval の組み合わせ
-/\(function\([^)]*\)\{[^}]*eval\([^}]*\}\)\([^)]*\)/
-
-// 暗号化された文字列（高エントロピー）
-/["'][A-Za-z0-9+/=]{50,}["']/
-
-// 復号関数の特徴的パターン
-/function\([^)]*\)\{[^}]*charCodeAt[^}]*fromCharCode[^}]*\}/
-```
+これらは調査候補を探すための式です。正常なコードにも一致し、空白や構文の変更で見逃す場合もあります。一致だけで悪性と判断せず、構文とデータの流れを調べてください。本ツールに自動判定器を実装しているわけではありません。
 
 #### 2. エントロピー解析
 
-**実装例:**
-```javascript
-function calculateEntropy(str) {
-  const freqs = {};
-  for (let char of str) {
-    freqs[char] = (freqs[char] || 0) + 1;
-  }
-  
-  let entropy = 0;
-  const len = str.length;
-  for (let freq of Object.values(freqs)) {
-    const p = freq / len;
-    entropy -= p * Math.log2(p);
-  }
-  
-  return entropy;
-}
+シーザーシフトは対象文字を一対一で置き換えるため、文字の出現頻度を変えません。シフト対象外の文字もそのまま残ります。したがって、文字単位のシャノンエントロピーを計算しても、元コードとシフト後の文字列は同じ値になります。
 
-// 使用例
-const suspiciousString = "kJ8#mN2$pQ9..."; // 暗号化された文字列
-if (calculateEntropy(suspiciousString) > 4.5) {
-  console.warn("高エントロピー文字列を検出");
-}
-```
+`ObfuscatorCore.entropy`はコードポイント単位で頻度と分母を数えます。日本語サンプルをシフト3で変換した結果は次のとおりです。復号関数などを加えた生成物全体と、シフト直後の文字列は区別します。
+
+| 測定対象 | 値 |
+|---|---:|
+| 元コードの文字数 | 175 |
+| シフト対象の文字数 | 146 |
+| シフト対象外の文字数 | 29 |
+| 生成物の文字数 | 490 |
+| 生成物と元コードの文字数比 | 280.0% |
+| 元コードのシャノンエントロピー | 5.2597 bit/文字 |
+| シフト後文字列のシャノンエントロピー | 5.2597 bit/文字 |
+
+高いエントロピーだけでは難読化や悪性を識別できません。内容の種類や構文も含めて判断してください。
 
 #### 3. 動的解析
 
@@ -167,37 +151,15 @@ if (calculateEntropy(suspiciousString) > 4.5) {
 - `XMLHttpRequest`, `fetch()`
 - `location.href`, `window.open()`
 
-**実装例:**
-```javascript
-// eval呼び出しの監視
-const originalEval = window.eval;
-window.eval = function(code) {
-  console.warn("eval実行を検出:", code.substring(0, 100));
-  // セキュリティチェックロジック
-  if (isSecurityThreat(code)) {
-    throw new Error("セキュリティ脅威を検出");
-  }
-  return originalEval.call(this, code);
-};
-```
+動的解析では、専用の隔離環境でDOM変更、通信要求、例外などを記録します。`eval`を独自の関数に置き換えるだけでは、呼び出し方法やスコープが変わって対象の挙動を正しく観察できない場合があります。本ツールの実行欄は、信頼できる小さなサンプルの動作確認用です。
 
 ### 高度な検知手法
 
 #### AST（抽象構文木）解析
 
-```javascript
-// Babel/ESPrimaを使用した構造解析
-const ast = esprima.parseScript(code);
-estraverse.traverse(ast, {
-  enter: function(node) {
-    if (node.type === 'CallExpression' && 
-        node.callee.type === 'Identifier' && 
-        node.callee.name === 'eval') {
-      console.warn("eval呼び出しを検出");
-    }
-  }
-});
-```
+現行の生成物では、`CallExpression`の呼び出し先が`Identifier`の`eval`かどうかを見るだけでは足りません。`(0, eval)`は[ESTreeのSequenceExpression](https://github.com/estree/estree/blob/master/es5.md#sequenceexpression)として表現され、末尾の式が呼び出し先になります。
+
+ASTを使う検査では、直接呼び出しに加えて、この`SequenceExpression`の末尾も確認します。別名変数やプロパティを経由する呼び出しを扱うには、識別子の参照先や代入の流れも調べる必要があります。構文上の候補検出と、コードの悪性判定は別の処理です。
 
 #### 機械学習による検知
 
@@ -236,6 +198,8 @@ estraverse.traverse(ast, {
 
 #### 類似コードを発見した場合の対処法
 
+文字列パターンの一致だけでサービス停止やコード削除を決めず、配布元と復号後の内容を確認します。悪意のある変更や被害が疑われる場合は、組織の対応手順に従って次の作業を進めてください。
+
 1. **即座の隔離**
    - 影響範囲の特定
    - サービス停止の検討
@@ -259,9 +223,12 @@ estraverse.traverse(ast, {
 ## 🔗 参考資料
 
 ### 学術論文・技術文書
-- "Malicious JavaScript Detection using Machine Learning" (IEEE, 2020)
-- "Dynamic Analysis of Obfuscated JavaScript" (USENIX Security, 2019)
-- "Code Obfuscation Techniques and Their Detection" (ACM Computing Surveys, 2021)
+
+- [MDN：evalと直接呼び出し、間接呼び出し](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval)
+- [MDN：iframeのsandbox属性](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe#sandbox)
+- [MDN：postMessageの送受信元検査](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage#security_concerns)
+- [MDN：CSPのconnect-src](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/connect-src)
+- [ESTree：JavaScript構文木の定義](https://github.com/estree/estree/blob/master/es5.md)
 
 ### セキュリティツール
 - **ESLint** - 静的解析
@@ -274,6 +241,4 @@ estraverse.traverse(ast, {
 - NIST Cybersecurity Framework
 - ISO/IEC 27001 Security Standards
 
----
-
-**免責事項:** この文書は教育・研究目的で作成されています。記載された技術や手法を悪意のある目的で使用することは推奨されません。使用者は適用される法律や規制を遵守する責任があります。
+**免責事項：**この文書は教育と研究のために作成されています。使用者は適用される法律と規制を遵守してください。
