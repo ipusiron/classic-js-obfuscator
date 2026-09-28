@@ -125,6 +125,15 @@ test("scripts and styles resolve to existing local files without a build step", 
   }
   assert.ok(sources.indexOf("js/obfuscator-core.js") < sources.indexOf("script.js"));
   assert.ok(sources.indexOf("js/sandbox-runner.js") < sources.indexOf("script.js"));
+  assert.ok(sources.includes("js/samples.js"));
+  assert.ok(sources.includes("js/editor-state.js"));
+  assert.ok(sources.indexOf("js/samples.js") < sources.indexOf("js/editor-state.js"));
+  assert.ok(sources.indexOf("js/editor-state.js") < sources.indexOf("script.js"));
+  assert.ok(sources.includes("js/learning-core.js"));
+  assert.ok(sources.includes("js/learning-ui.js"));
+  assert.ok(sources.indexOf("js/obfuscator-core.js") < sources.indexOf("js/learning-core.js"));
+  assert.ok(sources.indexOf("js/learning-core.js") < sources.indexOf("js/learning-ui.js"));
+  assert.ok(sources.indexOf("js/learning-ui.js") < sources.indexOf("script.js"));
 });
 
 test("new-window links have explicit opener and referrer protection", () => {
@@ -174,7 +183,7 @@ test("icon controls and modal dialogs have accessible names", () => {
 
 test("editable fields have labels, outputs are readonly, and action targets exist", () => {
   const labels = new Set(page.elements.filter((item) => item.tag === "label").map((item) => attribute(item, "for")));
-  for (const element of page.elements.filter((item) => ["input", "textarea"].includes(item.tag))) {
+  for (const element of page.elements.filter((item) => ["input", "textarea", "select"].includes(item.tag))) {
     assert.ok(labels.has(attribute(element, "id")), `missing label for ${attribute(element, "id")}`);
   }
   for (const id of ["outputCode", "outputCodeCompare"]) assert.ok(byId(id).attributes.has("readonly"), id);
@@ -182,15 +191,30 @@ test("editable fields have labels, outputs are readonly, and action targets exis
     "key", "inputCode", "inputCodeCompare", "btn-generate", "btn-run", "btn-copy", "btn-download",
     "btn-normal-view", "btn-compare-view", "normal-view", "compare-view", "help-btn", "tutorial-btn",
     "tutorial-prev", "tutorial-next", "tutorial-overlay", "help-modal", "output-stats", "run-notice", "run-title",
+    "sample-select", "btn-load-sample", "btn-clear-input", "btn-reset-input", "btn-restore-input", "sample-state",
+    "inspect-input", "inspect-source", "btn-inspect-load", "btn-inspect", "btn-inspect-clear",
   ]) byId(id);
   assert.equal(attribute(byId("key"), "aria-describedby"), "key-error");
 });
 
 test("validation, notifications and execution results expose live announcements", () => {
-  for (const id of ["key-error", "toast", "output-status"]) {
+  for (const id of ["key-error", "toast", "output-status", "sample-state", "lab-status", "inspect-status"]) {
     assert.equal(attribute(byId(id), "role"), "status", id);
   }
   assert.equal(attribute(byId("run-result"), "role"), "log");
   assert.equal(attribute(byId("run-result"), "aria-live"), "polite");
   assert.ok(attribute(byId("run-host"), "aria-label")?.trim());
+  assert.equal(byId("inspect-source").tag, "pre");
+  assert.equal(attribute(byId("inspect-source"), "aria-readonly"), "true");
+});
+
+test("restored text keeps wrapping and bidi isolation without large-plaintext layout regressions", () => {
+  const css = fs.readFileSync(path.join(root, "style.css"), "utf8");
+  const restored = css.match(/\.inspect-source\s*\{([^}]+)\}/)?.[1];
+  assert.ok(restored);
+  assert.match(restored, /unicode-bidi:\s*isolate\s*;/);
+  assert.match(restored, /direction:\s*ltr\s*;/);
+  assert.match(restored, /white-space:\s*pre-wrap\s*;/);
+  assert.match(restored, /overflow-wrap:\s*anywhere\s*;/);
+  assert.match(restored, /max-height:/);
 });

@@ -6,8 +6,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const core = require("../js/obfuscator-core.js");
+const learning = require("../js/learning-core.js");
 const messages = require("../js/i18n.js").messages;
 const expected = require("./fixtures/expect.json");
+const learningExpected = require("./fixtures/learning-expect.json");
 
 const root = path.join(__dirname, "..");
 const documents = Object.fromEntries(["README.md", "README.en.md"].map((name) =>
@@ -28,6 +30,11 @@ const headingPairs = [
   [3, "🎮 便利な機能の使い方", "🎮 Using the convenience features"],
   [3, "🧪 サンプルコードで動作確認（初回実験手順）", "🧪 Checking the sample (first experiment)"],
   [3, "生成物の利用とスコープ", "Using generated snippets and understanding scope"],
+  [3, "学習ラボの使い方", "Using the learning lab"],
+  [4, "変換過程を見る", "Inspecting the transformation steps"],
+  [4, "実行せずに復号を確認する", "Inspecting restoration without execution"],
+  [4, "サイズと文字頻度を比べる", "Comparing sizes and character frequencies"],
+  [4, "教材と入力の復帰", "Samples and one-step input restore"],
   [2, "⚠️ 注意", "⚠️ Cautions"],
   [3, "セキュリティに関する説明", "Security explanation"],
   [2, "🔬 技術・セキュリティ解説", "🔬 Technical and security guide"],
@@ -74,6 +81,42 @@ function imagePaths(source) {
     .filter((target) => !/^(?:[a-z]+:|\/\/)/i.test(target));
 }
 
+function numericRows(source, marker, count, columns) {
+  const rows = marked(source, marker).split("\n").slice(2);
+  assert.ok(rows.length > 0, `${marker}: extraction must not be empty`);
+  assert.equal(rows.length, count, `${marker}: every row must be parsed`);
+  return rows.map((row, index) => {
+    const cells = row.split("|").map((cell) => cell.trim());
+    assert.equal(cells.length, columns + 3, `${marker}: row ${index} column count`);
+    assert.equal(cells[0], "");
+    assert.equal(cells.at(-1), "");
+    assert.ok(cells[1], `${marker}: a row label is required`);
+    return cells.slice(2, -1).map((cell) => {
+      assert.match(cell, /^[0-9]+(?:\.[0-9]+)?$/, `${marker}: every value must be numeric`);
+      return Number(cell);
+    });
+  });
+}
+
+function sizeRows(metrics) {
+  const triple = (value) => [value.codePoints, value.utf16Units, value.utf8Bytes];
+  return [
+    ...["source", "payload", "literalBody", "escapeExpansion", "decoder"].map((key) => triple(metrics[key])),
+    [metrics.fixedSyntax, metrics.fixedSyntax, metrics.fixedSyntax],
+    [metrics.keyDigits, metrics.keyDigits, metrics.keyDigits],
+    triple(metrics.wrapper), triple(metrics.snippet),
+  ];
+}
+
+function frequencyRows(metrics, frequency) {
+  return [
+    metrics.ratios.codePoints, metrics.ratios.utf8Bytes,
+    frequency.totalCount, frequency.uniqueCount, frequency.shownUnique,
+    frequency.rows.reduce((sum, row) => sum + row.count, 0), frequency.otherCount, frequency.passthroughCount,
+    Number(frequency.entropy.source.toFixed(4)), Number(frequency.entropy.payload.toFixed(4)),
+  ].map((value) => [value]);
+}
+
 test("Japanese README preserves the original YAML metadata bytes, keys and block lists", () => {
   const source = documents["README.md"];
   const metadata = source.match(/^<!--\n---\n[\s\S]*?\n---\n-->/)?.[0];
@@ -98,7 +141,7 @@ test("Japanese README preserves the original YAML metadata bytes, keys and block
 });
 
 test("English and Japanese READMEs retain the complete heading correspondence", () => {
-  assert.equal(headingPairs.length, 26, "the correspondence table must cover every section");
+  assert.equal(headingPairs.length, 31, "the correspondence table must cover every section");
   for (const [name, languageIndex] of [["README.md", 1], ["README.en.md", 2]]) {
     const withoutCode = documents[name].replace(/```[\s\S]*?```/g, "");
     const headings = [...withoutCode.matchAll(/^(#{1,6}) (.+)$/gm)]
@@ -161,15 +204,48 @@ for (const [name, source] of Object.entries(documents)) {
     assert.equal(new Set(entries).size, entries.length, "inventory entries must be unique");
     assert.equal(entries[0], "classic-js-obfuscator/");
     assert.equal(new Set(lines.map((line) => line.indexOf("#"))).size, 1, "description columns must align");
+    assert.ok(lines.every((line) => line.indexOf("#") === 37), "description alignment must retain the original zero-based index 37");
     assert.deepEqual(entries.slice(1).sort(), actualInventory().sort());
+  });
+
+  test(`${name}: learning tables recalculate every size and frequency row against the fixed fixture`, () => {
+    const sample = codeBlock(source, "sample", "javascript");
+    const metrics = learning.analyzeSource(sample, 3);
+    const frequency = learning.frequencyAnalysis(sample, 3);
+    assert.deepEqual(metrics, learningExpected.metrics.sample3);
+    assert.deepEqual(frequency, learningExpected.frequency.sample3);
+    const sizes = numericRows(source, "learning-sizes", 9, 3);
+    const statistics = numericRows(source, "learning-stats", 10, 1);
+    assert.deepEqual(sizes, sizeRows(metrics));
+    assert.deepEqual(sizes, sizeRows(learningExpected.metrics.sample3));
+    assert.deepEqual(statistics, frequencyRows(metrics, frequency));
+    assert.deepEqual(statistics, frequencyRows(learningExpected.metrics.sample3, learningExpected.frequency.sample3));
+    for (const unit of ["codePoints", "utf16Units", "utf8Bytes"]) {
+      assert.equal(metrics.source[unit] + metrics.escapeExpansion[unit] + metrics.wrapper[unit], metrics.snippet[unit]);
+      assert.equal(metrics.decoder[unit] + metrics.fixedSyntax + metrics.keyDigits, metrics.wrapper[unit]);
+    }
+    assert.equal(frequency.rows.reduce((sum, row) => sum + row.count, 0) + frequency.otherCount, frequency.totalCount);
+    assert.equal(frequency.entropy.invariant, true);
+    assert.deepEqual(learning.analyzeSource("", 94), learningExpected.metrics.empty94);
+    assert.deepEqual(learning.analyzeSource("A😀", 3), learningExpected.metrics.emoji);
+    assert.deepEqual(learning.frequencyAnalysis("", 0), learningExpected.frequency.empty0);
+    for (const value of Object.values(learningExpected.limits)) {
+      assert.ok(source.includes(value.toLocaleString("en-US")), `document the limit ${value}`);
+    }
+    assert.ok(source.includes("312"), "two-digit-key empty wrapper must be documented");
+    assert.ok(source.includes("U+FFFD"), "UTF-8 lone-surrogate replacement must be documented");
   });
 
   test(`${name}: all relative screenshot references point to real PNG images`, () => {
     const images = imagePaths(source);
-    assert.ok(images.length > 0, "the screenshot section must contain relative image references");
+    assert.equal(images.length, 5, "the screenshot section must reference all five images once");
+    assert.equal(new Set(images).size, 5, "screenshot references must be unique");
+    const captions = [...source.matchAll(/^> !\[[^\]]+\]\((assets\/[^)]+\.png)\)\n>\n> \*([^\n]+)\*$/gm)];
+    assert.deepEqual(captions.map((match) => match[1]), images, "every image needs exactly one one-line caption");
     for (const image of images) {
       const bytes = fs.readFileSync(path.join(root, image));
       assert.equal(bytes.subarray(0, 8).toString("hex"), "89504e470d0a1a0a", image);
+      assert.ok(bytes.length <= 300 * 1024, `${image}: screenshot exceeds 300 KB`);
     }
   });
 }
@@ -178,6 +254,9 @@ test("every screenshot asset is referenced and English screenshots have their ow
   const referenced = new Set(Object.values(documents).flatMap(imagePaths));
   const assets = actualInventory().filter((name) => /^assets\/.*\.png$/i.test(name));
   assert.deepEqual([...referenced].sort(), assets.sort());
+  for (const source of Object.values(documents)) {
+    assert.deepEqual(imagePaths(source).sort(), assets.sort(), "each language must reference every screenshot asset");
+  }
   assert.ok(imagePaths(documents["README.en.md"]).some((name) => name.startsWith("assets/en/")));
 });
 

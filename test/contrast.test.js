@@ -90,6 +90,18 @@ for (const theme of ["dark", "light"]) {
     const card = color(variables["--card"]);
     checkPair("body", variables["--text"], [page, card], variables);
     checkPair("muted labels and placeholders", variables["--muted"], [page, card], variables);
+    const sampleSelect = declarations(".sample-panel select");
+    checkPair("sample select", sampleSelect.color, backgrounds(sampleSelect.background, variables, card), variables);
+    const learningBackgrounds = [card, color(variables["--input-bg"])];
+    for (const selector of [".learning-lab", ".lab-status", ".lab-row", ".lab-pair dt", ".lab-pair dd", ".lab-formula"]) {
+      checkPair(selector, declarations(selector).color, learningBackgrounds, variables);
+    }
+    checkPair("learning warning", declarations(".lab-warning").color, [card], variables);
+    checkPair("inspection error", declarations(".inspect-error").color, [card], variables);
+    const restored = declarations(".inspect-source");
+    checkPair("restored code", restored.color, backgrounds(restored.background, variables, card), variables);
+    const summary = declarations(".lab-details > summary:hover");
+    checkPair("learning disclosure hover", summary.color, backgrounds(summary.background, variables, card), variables);
     checkPair("help headings and links", variables["--accent-2"], [page, card], variables);
     checkPair("help secondary headings and hovered links", variables["--accent"], [page, card], variables);
 

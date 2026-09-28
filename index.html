@@ -123,6 +123,21 @@
 
     <!-- タブ1: シーザー暗号 -->
     <section id="tab-caesar" class="tab-content active" role="tabpanel" aria-labelledby="tab-button-caesar">
+      <section class="sample-panel" aria-labelledby="sample-title">
+        <h2 id="sample-title">教材と入力の操作</h2>
+        <label id="sample-label" for="sample-select">読み込む教材を選択</label>
+        <select id="sample-select" aria-describedby="sample-description sample-key-note"></select>
+        <p id="sample-description" class="note"></p>
+        <p id="sample-key-note" class="note"></p>
+        <p id="sample-expected" class="note"></p>
+        <div class="sample-actions">
+          <button id="btn-load-sample" type="button">サンプルを読み込む</button>
+          <button id="btn-clear-input" type="button">入力をクリア</button>
+          <button id="btn-reset-input" type="button">初期化</button>
+          <button id="btn-restore-input" type="button" disabled>直前の入力に戻す</button>
+        </div>
+        <p id="sample-state" class="note" role="status" aria-live="polite"></p>
+      </section>
       <section class="controls">
         <div class="field-inline-label">
           <label for="key">🔑 シフト量（0〜94の整数）</label>
@@ -186,6 +201,64 @@
           </ul>
         </details>
       </section>
+      <section id="learning-lab" class="learning-lab" aria-labelledby="lab-title">
+        <h2 id="lab-title">学習ラボ</h2>
+        <p id="lab-intro" class="note">生成したときの入力と鍵から、変換過程・サイズ・文字頻度を確認します。ここではコードを実行しません。</p>
+        <p id="lab-status" class="lab-status" role="status" aria-live="polite"></p>
+        <details id="trace-details" class="lab-details">
+          <summary id="trace-summary">変換過程</summary>
+          <div class="lab-content">
+            <p id="trace-note" class="note">全入力のうち先頭200コードポイントまで表示します。ASCII 32〜126だけを法95で循環シフトします。文字のシフトと、JavaScript文字列へのエスケープは別の段階です。</p>
+            <p id="trace-count" class="note"></p>
+            <div id="trace-rows" class="lab-data-list lab-scroll trace-list" role="region" aria-labelledby="trace-summary" tabindex="-1"></div>
+          </div>
+        </details>
+        <details id="size-details" class="lab-details">
+          <summary id="size-summary">サイズの分解</summary>
+          <div class="lab-content">
+            <p id="size-note" class="note">コードポイント数・UTF-16単位数・UTF-8バイト数を区別します。見た目の1文字が複数コードポイントの場合もあります。エスケープ後の文字列本体に囲みの引用符は含めず、引用符はラッパー側で数えます。</p>
+            <div id="size-rows" class="lab-data-list"></div>
+            <div id="size-equations" class="lab-equations"></div>
+            <p id="size-wrapper" class="note"></p>
+            <dl id="size-ratios" class="lab-ratios"></dl>
+            <p id="size-ratio-empty" class="note" hidden></p>
+            <p id="size-lone-warning" class="lab-warning" hidden></p>
+          </div>
+        </details>
+        <details id="frequency-details" class="lab-details">
+          <summary id="frequency-summary">文字頻度</summary>
+          <div class="lab-content">
+            <p id="frequency-note" class="note">元コードと、エスケープ前のシフト後payloadを全入力で集計し、上位20種類を表示します。ラッパーやエスケープ表記は含めません。エントロピーは暗号強度や安全性の指標ではありません。</p>
+            <p id="frequency-count" class="note"></p>
+            <div id="frequency-rows" class="lab-data-list lab-scroll" role="region" aria-labelledby="frequency-summary" tabindex="-1"></div>
+            <p id="frequency-other" class="note"></p>
+            <p id="frequency-passed" class="note"></p>
+            <p id="frequency-entropy" class="note"></p>
+            <p id="frequency-invariant" class="note"></p>
+          </div>
+        </details>
+        <section id="inspector-panel" class="inspector-panel" aria-labelledby="inspect-title">
+          <h3 id="inspect-title">実行しない復号確認</h3>
+          <p id="inspect-intro" class="note">このツールの固定形式だけを文字列として復元します。形式の一致は、コードの安全性を意味しません。</p>
+          <label id="inspect-input-label" for="inspect-input">確認する生成物</label>
+          <textarea id="inspect-input" rows="7" spellcheck="false" aria-describedby="inspect-input-note inspect-error"></textarea>
+          <p id="inspect-input-note" class="note">上限は2,000,000UTF-16単位です。貼り付け時にtextareaが改行を正規化する場合があります。</p>
+          <div class="inspect-actions">
+            <button id="btn-inspect-load" type="button" disabled>現在の生成物を読み込む</button>
+            <button id="btn-inspect" type="button">実行せずに復元</button>
+            <button id="btn-inspect-clear" type="button">確認欄を消去</button>
+          </div>
+          <p id="inspect-status" class="lab-status" role="status" aria-live="polite"></p>
+          <p id="inspect-key" class="note"></p>
+          <p id="inspect-length" class="note"></p>
+          <p id="inspect-comparison" class="note"></p>
+          <p id="inspect-error" class="inspect-error"></p>
+          <p id="inspect-source-label" class="inspect-label">復元した文字列（読み取り専用）</p>
+          <pre id="inspect-source" class="inspect-source" role="textbox" aria-readonly="true" aria-multiline="true" aria-labelledby="inspect-source-label" tabindex="0"></pre>
+          <p id="inspect-lone-warning" class="lab-warning" hidden></p>
+          <p id="inspect-safety-note" class="note">復元できても、実行してよいという意味ではありません。ここではコードを実行しません。</p>
+        </section>
+      </section>
     </section>
 
     <!-- タブ2: ビジュネル暗号（未実装） -->
@@ -203,6 +276,10 @@
   <script src="js/obfuscator-core.js"></script>
   <script src="js/sandbox-runner.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/samples.js"></script>
+  <script src="js/editor-state.js"></script>
+  <script src="js/learning-core.js"></script>
+  <script src="js/learning-ui.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
