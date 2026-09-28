@@ -311,4 +311,9 @@ test("browser dependencies and Actions are pinned and the test workflow has no d
   assert.doesNotMatch(workflow, /pull_request_target|write-all|contents: write|secrets\./);
   assert.match(workflow, /retention-days: 7/);
   assert.match(workflow, /python -B test\/browser\/smoke\.py/);
+  const jobEnvironment = workflow.match(/^    env:\n([\s\S]*?)^    steps:/m)?.[1];
+  assert.ok(jobEnvironment);
+  assert.doesNotMatch(jobEnvironment, /runner\./, "runner context is unavailable in job-level env");
+  assert.match(workflow, /run: python -m playwright install --with-deps chromium\n        env:\n          PLAYWRIGHT_BROWSERS_PATH:/);
+  assert.match(workflow, /run: python -B test\/browser\/smoke\.py\n        env:\n          PLAYWRIGHT_BROWSERS_PATH:/);
 });
