@@ -38,6 +38,7 @@ const headingPairs = [
   [4, "教材と入力の復帰", "Samples and one-step input restore"],
   [4, "学習クイズ", "Learning quiz"],
   [4, "コードを含めない設定共有", "Sharing settings without code"],
+  [3, "ビジュネル暗号タブの使い方", "Using the Vigenere tab"],
   [2, "⚠️ 注意", "⚠️ Cautions"],
   [3, "セキュリティに関する説明", "Security explanation"],
   [2, "🔬 技術・セキュリティ解説", "🔬 Technical and security guide"],
@@ -159,7 +160,7 @@ test("Japanese README preserves the original YAML metadata bytes, keys and block
 });
 
 test("English and Japanese READMEs retain the complete heading correspondence", () => {
-  assert.equal(headingPairs.length, 35, "the correspondence table must cover every section");
+  assert.equal(headingPairs.length, 36, "the correspondence table must cover every section");
   for (const [name, languageIndex] of [["README.md", 1], ["README.en.md", 2]]) {
     const withoutCode = documents[name].replace(/```[\s\S]*?```/g, "");
     const headings = [...withoutCode.matchAll(/^(#{1,6}) (.+)$/gm)]
@@ -181,6 +182,14 @@ test("both READMEs retain series badges, language navigation and the 100-tool pr
 });
 
 for (const [name, source] of Object.entries(documents)) {
+  test(`${name}: Vigenere example matches the independent fixture and both transforms`, () => {
+    const vigenere = require("../js/vigenere-core.js");
+    const vector = JSON.parse(codeBlock(source, "vigenere-vector", "json"));
+    assert.deepEqual(vector, require("./fixtures/vigenere-expect.json")[2]);
+    assert.equal(vigenere.transform(vector.source, vector.key), vector.payload);
+    assert.equal(vigenere.transform(vector.payload, vector.key, true), vector.source);
+    assert.equal(vigenere.inspectSnippet(vigenere.buildSnippet(vector.source, vector.key)).source, vector.source);
+  });
   test(`${name}: sample and generated code match the reference and the implementation`, () => {
     const sample = codeBlock(source, "sample", "javascript");
     const snippet = codeBlock(source, "snippet", "javascript");
@@ -256,8 +265,8 @@ for (const [name, source] of Object.entries(documents)) {
 
   test(`${name}: all relative screenshot references point to real PNG images`, () => {
     const images = imagePaths(source);
-    assert.equal(images.length, 7, "the screenshot section must reference all seven images once");
-    assert.equal(new Set(images).size, 7, "screenshot references must be unique");
+    assert.equal(images.length, 9, "the screenshot section must reference all nine images once");
+    assert.equal(new Set(images).size, 9, "screenshot references must be unique");
     const captions = [...source.matchAll(/^> !\[[^\]]+\]\((assets\/[^)]+\.png)\)\n>\n> \*([^\n]+)\*$/gm)];
     assert.deepEqual(captions.map((match) => match[1]), images, "every image needs exactly one one-line caption");
     for (const image of images) {

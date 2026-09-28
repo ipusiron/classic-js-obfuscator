@@ -27,6 +27,7 @@ let editorState = null;
 let learningUI = null;
 let quizUI = null;
 let shareUI = null;
+let vigenereUI = null;
 let currentView = "normal";
 let setViewMode = null;
 let applyingSharedSettings = false;
@@ -254,6 +255,8 @@ function init() {
 function initTabs() {
   const buttons = [...document.querySelectorAll(".tab-button")];
   function activate(button) {
+    if (runner) runner.reset();
+    if (vigenereUI) vigenereUI.stop();
     for (const tab of buttons) {
       const selected = tab === button;
       tab.classList.toggle("active", selected);
@@ -481,6 +484,7 @@ function initTutorial() {
   // チュートリアルボタンのイベントリスナー
   const tutorialBtn = $("tutorial-btn");
   tutorialBtn.addEventListener("click", () => {
+    $("tab-button-caesar").click();
     startTutorial();
   });
 
@@ -566,6 +570,19 @@ function initHelp() {
 document.addEventListener("DOMContentLoaded", () => {
   ObfuscatorI18n.init();
   init();
+  vigenereUI = VigenereUI.create({
+    document, t, getLanguage: () => ObfuscatorI18n.language, Runner: SandboxRunner,
+    writeClipboard: value => navigator.clipboard.writeText(value),
+    download: value => {
+      const url = URL.createObjectURL(new Blob([value], { type: "text/javascript;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "vigenere-obfuscated.js";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    },
+  });
+  window.addEventListener("languagechange", () => vigenereUI.refreshLanguage());
   initTabs();
   initViewMode();
   initTutorial();
