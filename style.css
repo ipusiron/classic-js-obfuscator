@@ -2,58 +2,73 @@
   --bg: #0b1020;
   --card: #1a2340;
   --text: #e8ecf1;
-  --muted: #9fb2c8;
+  --muted: #b8c7d9;
   --accent: #7aa2ff;
   --accent-2: #90e0ef;
   --border: #3a4668;
   --border-light: #4a5a7f;
+  --input-bg: #1a2340;
+  --inactive-bg: #2a3452;
+  --inactive-text: #b8c7d9;
+  --hover-bg: #2a3452;
+  --warning-text: #ffb3b0;
+  --warning-hover: #ffd2cf;
+  --error-text: #ff8a85;
+  --primary-start: #2f5bd3;
+  --primary-end: #2449b8;
+  --run-start: #00739a;
+  --run-end: #005f80;
+  --copy-start: #1f7a3a;
+  --copy-end: #17652f;
+  --download-start: #c2410c;
+  --download-end: #9a3412;
+  --help-start: #7c3aed;
+  --help-end: #6d28d9;
+  --button-text: #ffffff;
+  --tutorial-start: #90e0ef;
+  --tutorial-end: #6ac8e8;
+  --tutorial-text: #0b1020;
+  --toast-start: #15803d;
+  --toast-end: #166534;
+  --toast-error-start: #b91c1c;
+  --toast-error-end: #991b1b;
 }
 
 [data-theme="light"] {
   --bg: #f8fafc;
   --card: #ffffff;
   --text: #1e293b;
-  --muted: #64748b;
-  --accent: #3b82f6;
-  --accent-2: #06b6d4;
+  --muted: #526077;
+  --accent: #1d4ed8;
+  --accent-2: #0e7490;
   --border: #cbd5e1;
   --border-light: #94a3b8;
+  --input-bg: #f8fafc;
+  --inactive-bg: #e2e8f0;
+  --inactive-text: #475569;
+  --hover-bg: #f1f5f9;
+  --warning-text: #991b1b;
+  --warning-hover: #7f1d1d;
+  --error-text: #b91c1c;
+  --tutorial-start: #06b6d4;
 }
 
 [data-theme="light"] textarea,
-[data-theme="light"] input[type="number"] {
+[data-theme="light"] #key {
   background: #f8fafc;
   border-color: #cbd5e1;
 }
 
 [data-theme="light"] textarea:focus,
-[data-theme="light"] input[type="number"]:focus {
+[data-theme="light"] #key:focus {
   background: #ffffff;
   border-color: #3b82f6;
 }
 
-[data-theme="light"] .tab-button {
-  background: #e2e8f0;
-  color: #475569;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-[data-theme="light"] .tab-button:hover {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-[data-theme="light"] .view-btn {
-  background: #e2e8f0;
-  color: #475569;
-  border-color: #cbd5e1;
-}
-
-[data-theme="light"] .view-btn:hover {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-* { box-sizing: border-box; }
+body { overflow-wrap: anywhere; }
+body.dialog-open { overflow: hidden; }
 
 html, body {
   margin: 0;
@@ -67,20 +82,25 @@ html, body {
 .container {
   max-width: 980px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 16px;
 }
 
 .header-content {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  text-align: center;
 }
 
 .header-buttons {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
   align-items: center;
+  min-width: 0;
 }
 
 header h1 {
@@ -95,14 +115,14 @@ header h1 {
 }
 
 .theme-toggle-btn {
-  background: linear-gradient(180deg, #f59e0b, #d97706);
-  color: #fff;
-  border: 2px solid #f59e0b;
+  background: linear-gradient(180deg, var(--download-start), var(--download-end));
+  color: var(--button-text);
+  border: 2px solid var(--download-start);
   padding: 10px;
   border-radius: 12px;
   font-size: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: 44px;
   height: 44px;
   display: flex;
@@ -113,7 +133,7 @@ header h1 {
 .theme-toggle-btn:hover {
   transform: translateY(-2px) rotate(15deg);
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-  filter: brightness(1.1);
+  filter: none;
 }
 
 [data-theme="light"] .theme-toggle-btn {
@@ -126,58 +146,59 @@ header h1 {
 }
 
 .tutorial-start-btn {
-  background: linear-gradient(180deg, var(--accent-2), #6ac8e8);
-  color: var(--bg);
-  border: 2px solid var(--accent-2);
+  background: linear-gradient(180deg, var(--tutorial-start), var(--tutorial-end));
+  color: var(--tutorial-text);
+  border: 2px solid var(--tutorial-start);
   padding: 10px 16px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: normal;
 }
 
 .help-btn {
-  background: linear-gradient(180deg, #8b5cf6, #7c3aed);
-  color: #fff;
-  border: 2px solid #8b5cf6;
+  background: linear-gradient(180deg, var(--help-start), var(--help-end));
+  color: var(--button-text);
+  border: 2px solid var(--help-start);
   padding: 10px 16px;
   border-radius: 12px;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: normal;
 }
 
 .help-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-  filter: brightness(1.1);
+  filter: none;
 }
 
 .tutorial-start-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(144, 224, 239, 0.4);
-  filter: brightness(1.1);
+  filter: none;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 769px) {
+  .container {
+    padding: 24px;
+  }
+
   .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+    gap: 16px;
   }
-  
+
+  .header-content > div:first-child {
+    grid-column: 2;
+  }
+
   .header-buttons {
-    align-self: stretch;
-    justify-content: space-between;
-  }
-  
-  .tutorial-start-btn {
-    flex: 1;
-    text-align: center;
+    grid-column: 3;
   }
 }
 
@@ -191,21 +212,22 @@ header h1 {
 .controls {
   display: grid;
   gap: 12px;
-  padding: 20px 20px 0 20px;
+  padding: 16px 16px 0;
   border-bottom: 2px solid var(--border);
 }
 
 .field {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .field.inline {
-  grid-auto-flow: column;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   justify-content: start;
-  overflow-x: auto;
 }
 
 .field-inline-label {
@@ -219,13 +241,13 @@ header h1 {
   flex-shrink: 0;
 }
 
-.field-inline-label input[type="number"] {
+.field-inline-label #key {
   width: 100px;
 }
 
 .error-message {
-  color: #ff5e57;
-  font-size: 12px;
+  color: var(--error-text);
+  font-size: 14px;
   font-weight: 600;
   padding: 8px 12px;
   background: rgba(255, 94, 87, 0.1);
@@ -249,78 +271,87 @@ label {
   font-size: 14px;
 }
 
-input[type="number"] {
-  background: var(--card);
+#key {
+  background: var(--input-bg);
   color: var(--text);
   border: 2px solid var(--border);
   border-radius: 12px;
   padding: 10px 12px;
   width: 160px;
-  font-size: 14px;
+  font-size: 16px;
+  min-height: 44px;
+  max-width: 100%;
   transition: border-color 0.2s ease;
 }
 
-input[type="number"]:focus {
+#key:focus {
   outline: none;
   border-color: var(--accent);
 }
 
 button {
-  background: linear-gradient(180deg, var(--accent), #4c77ff);
-  color: #fff;
+  background: linear-gradient(180deg, var(--primary-start), var(--primary-end));
+  color: var(--button-text);
   border: none;
   padding: 10px 14px;
   border-radius: 12px;
   font-weight: 800;
+  font-family: inherit;
+  font-size: 14px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
   cursor: pointer;
   transition: transform .05s ease, filter .15s ease, opacity .15s ease;
-  white-space: nowrap;
+  white-space: normal;
 }
 
-button:hover:not(:disabled) { filter: brightness(1.05); }
+button:hover:not(:disabled) { filter: none; }
 button:active:not(:disabled) { transform: translateY(1px); }
 
 button:disabled {
-  opacity: 0.5;
+  opacity: 1;
   cursor: not-allowed;
-  filter: grayscale(0.5);
+  filter: none;
+  border: 2px dashed var(--muted);
 }
 
 button#btn-run {
-  background: linear-gradient(180deg, #00d4ff, #0096c7);
+  background: linear-gradient(180deg, var(--run-start), var(--run-end));
 }
 
 button#btn-copy {
-  background: linear-gradient(180deg, #7bd88f, #34c759);
+  background: linear-gradient(180deg, var(--copy-start), var(--copy-end));
 }
 
 button#btn-download {
-  background: linear-gradient(180deg, #ff947a, #ff5e57);
+  background: linear-gradient(180deg, var(--download-start), var(--download-end));
 }
 
 .note {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   margin: 0 0 6px 0;
 }
 
 .io {
-  padding: 20px;
+  padding: 16px;
   display: grid;
   gap: 24px;
+  min-width: 0;
 }
 
 textarea {
   width: 100%;
   min-height: 160px;
   resize: vertical;
-  background: var(--card);
+  background: var(--input-bg);
   color: var(--text);
   border: 2px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Noto Sans Mono", monospace;
-  font-size: 13px;
+  font-size: 16px;
   transition: border-color 0.2s ease;
 }
 
@@ -341,12 +372,14 @@ details.warn {
 details.warn summary {
   cursor: pointer;
   font-weight: 700;
-  color: #ff8a85;
+  color: var(--warning-text);
   font-size: 15px;
+  min-height: 44px;
+  padding-block: 8px;
 }
 
 details.warn summary:hover {
-  color: #ffb3b0;
+  color: var(--warning-hover);
 }
 
 details.warn[open] summary {
@@ -366,17 +399,18 @@ details.warn code {
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
-  color: #ffb3b0;
+  color: var(--warning-text);
 }
 
 [data-theme="light"] details.warn code {
   background: rgba(255, 94, 87, 0.3);
-  color: #dc2626;
+  color: var(--warning-text);
 }
 
 /* タブスタイル */
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   border-bottom: 3px solid var(--border);
   background: var(--bg);
   border-radius: 16px 16px 0 0;
@@ -384,20 +418,21 @@ details.warn code {
 }
 
 .tab-button {
-  flex: 1;
-  background: var(--border);
-  color: var(--muted);
+  flex: 1 1 10rem;
+  min-width: 0;
+  background: var(--inactive-bg);
+  color: var(--inactive-text);
   border: none;
   border-radius: 0;
   padding: 14px 20px;
   font-weight: 600;
   cursor: pointer;
-  transition: background .2s ease, color .2s ease;
+  transition: transform 0.2s ease;
   position: relative;
 }
 
 .tab-button:hover {
-  background: rgba(122, 162, 255, 0.15);
+  background: var(--hover-bg);
   color: var(--accent-2);
   filter: none;
   transform: none;
@@ -436,32 +471,34 @@ details.warn code {
 /* 表示モード切り替え */
 .view-toggle {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
 }
 
 .view-btn {
-  background: var(--border);
-  color: var(--muted);
+  min-width: 0;
+  background: var(--inactive-bg);
+  color: var(--inactive-text);
   border: 2px solid var(--border);
   padding: 8px 16px;
   border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .view-btn:hover {
-  background: rgba(122, 162, 255, 0.15);
+  background: var(--hover-bg);
   color: var(--accent-2);
   transform: translateY(-1px);
 }
 
 .view-btn.active {
-  background: linear-gradient(180deg, var(--accent), #4c77ff);
-  border-color: var(--accent);
-  color: #fff;
+  background: linear-gradient(180deg, var(--primary-start), var(--primary-end));
+  border-color: var(--primary-start);
+  color: var(--button-text);
 }
 
 .view-mode {
@@ -475,7 +512,7 @@ details.warn code {
 /* 比較モード */
 .compare-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -483,6 +520,7 @@ details.warn code {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .compare-pane label {
@@ -492,17 +530,17 @@ details.warn code {
 
 .compare-pane textarea {
   flex: 1;
-  min-height: 400px;
+  min-height: 200px;
 }
 
 /* レスポンシブ対応 */
-@media (max-width: 768px) {
+@media (min-width: 769px) {
   .compare-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  
+
   .compare-pane textarea {
-    min-height: 200px;
+    min-height: 400px;
   }
 }
 
@@ -512,8 +550,10 @@ details.warn code {
   bottom: -100px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #34c759, #7bd88f);
-  color: #fff;
+  background: linear-gradient(135deg, var(--toast-start), var(--toast-end));
+  color: var(--button-text);
+  width: max-content;
+  max-width: calc(100vw - 24px);
   padding: 12px 24px;
   border-radius: 12px;
   font-weight: 600;
@@ -530,7 +570,7 @@ details.warn code {
 }
 
 .toast.error {
-  background: linear-gradient(135deg, #ff5e57, #ff8a85);
+  background: linear-gradient(135deg, var(--toast-error-start), var(--toast-error-end));
   box-shadow: 0 4px 20px rgba(255, 94, 87, 0.4);
 }
 
@@ -557,23 +597,25 @@ details.warn code {
 }
 
 .tutorial-highlight {
-  position: absolute;
+  position: fixed;
   border: 3px solid var(--accent);
   border-radius: 12px;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8);
-  transition: all 0.3s ease;
+  transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease;
   pointer-events: none;
   background: none;
 }
 
 .tutorial-tooltip {
-  position: absolute;
+  position: fixed;
   background: var(--card);
   border: 2px solid var(--accent);
   border-radius: 16px;
   padding: 0;
-  min-width: 350px;
-  max-width: 450px;
+  min-width: 0;
+  width: min(450px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   animation: slideIn 0.3s ease;
 }
@@ -593,41 +635,43 @@ details.warn code {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  gap: 12px;
+  padding: 12px 16px;
   border-bottom: 2px solid var(--border);
-  background: linear-gradient(135deg, var(--accent), #4c77ff);
+  background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
   border-radius: 14px 14px 0 0;
 }
 
 .tutorial-header span {
   font-weight: 700;
-  color: #fff;
+  color: var(--button-text);
   font-size: 14px;
 }
 
 .tutorial-close {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--primary-end);
   border: none;
-  color: #fff;
-  width: 28px;
-  height: 28px;
+  color: var(--button-text);
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   border-radius: 50%;
   cursor: pointer;
   font-size: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+  transition: transform 0.2s ease;
   padding: 0;
 }
 
 .tutorial-close:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--primary-end);
   transform: none;
 }
 
 .tutorial-content {
-  padding: 20px;
+  padding: 16px;
   color: var(--text);
   line-height: 1.6;
 }
@@ -652,9 +696,10 @@ details.warn code {
 
 .tutorial-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-top: 2px solid var(--border);
 }
 
@@ -667,27 +712,28 @@ details.warn code {
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .tutorial-btn:hover {
-  background: var(--border);
+  background: var(--hover-bg);
   transform: translateY(-1px);
 }
 
 .tutorial-btn-primary {
-  background: linear-gradient(180deg, var(--accent), #4c77ff);
-  border-color: var(--accent);
-  color: #fff;
+  background: linear-gradient(180deg, var(--primary-start), var(--primary-end));
+  border-color: var(--primary-start);
+  color: var(--button-text);
 }
 
 .tutorial-btn-primary:hover {
-  filter: brightness(1.1);
+  background: linear-gradient(180deg, var(--primary-start), var(--primary-end));
+  filter: none;
   transform: translateY(-1px);
 }
 
 .tutorial-btn:disabled {
-  opacity: 0.5;
+  opacity: 1;
   cursor: not-allowed;
 }
 
@@ -713,7 +759,7 @@ details.warn code {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 12px;
 }
 
 .help-modal-content {
@@ -722,7 +768,8 @@ details.warn code {
   border-radius: 16px;
   width: 100%;
   max-width: 700px;
-  max-height: 80vh;
+  max-height: calc(100dvh - 24px);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
@@ -733,44 +780,46 @@ details.warn code {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  gap: 12px;
+  padding: 12px 16px;
   border-bottom: 2px solid var(--border);
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  background: linear-gradient(135deg, var(--help-start), var(--help-end));
   border-radius: 14px 14px 0 0;
 }
 
 .help-header h2 {
   margin: 0;
-  color: #fff;
+  color: var(--button-text);
   font-size: 20px;
   font-weight: 700;
 }
 
 .help-close {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--help-end);
   border: none;
-  color: #fff;
-  width: 32px;
-  height: 32px;
+  color: var(--button-text);
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
   border-radius: 50%;
   cursor: pointer;
   font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease;
+  transition: transform 0.2s ease;
   padding: 0;
 }
 
 .help-close:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--help-end);
   transform: none;
 }
 
 .help-body {
-  padding: 24px;
+  padding: 16px;
   overflow-y: auto;
-  max-height: calc(80vh - 80px);
+  min-height: 0;
   color: var(--text);
   line-height: 1.6;
 }
@@ -827,25 +876,24 @@ details.warn code {
 
 .warning-box h4 {
   margin: 0 0 8px 0;
-  color: #ff8a85;
+  color: var(--warning-text);
 }
 
 .warning-box ul {
   margin: 8px 0 0 0;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 769px) {
   .help-modal-content {
-    max-width: 95%;
-    max-height: 90vh;
+    max-height: 80vh;
   }
-  
+
   .help-header {
-    padding: 16px 20px;
+    padding: 20px 24px;
   }
-  
+
   .help-body {
-    padding: 20px;
+    padding: 24px;
   }
 }
 
@@ -861,7 +909,31 @@ footer {
   border-bottom: 1px dashed var(--accent-2);
 }
 .footer a:hover {
-  opacity: 0.9;
+  color: var(--accent);
+  opacity: 1;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 3px;
+}
+
+textarea:focus-visible, #key:focus-visible {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 3px;
+}
+
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 .run-panel { min-width: 0; }

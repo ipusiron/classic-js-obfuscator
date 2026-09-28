@@ -10,7 +10,7 @@ function showToast(message, isError = false) {
   toast.textContent = message;
   toast.classList.toggle("error", isError);
   toast.classList.add("show");
-  
+
   setTimeout(() => {
     toast.classList.remove("show");
     setTimeout(() => {
@@ -56,7 +56,13 @@ function init() {
   $("run-notice").textContent = SandboxRunner.supported ?
     "信頼できるコードだけを実行してください。実行画面は毎回初期化されます。" :
     "ファイルを直接開いた場合は実行できません。HTTPで開くと実行できます。生成・コピー・保存は利用できます。";
-  $("inputCode").value = "// サンプル：実行結果の欄に \"Hello Obfuscation!\" を表示する\nconsole.log(\"Hello Obfuscation!\");\nconst p = document.createElement(\"p\");\np.textContent = \"✅ 実行されました\";\ndocument.body.appendChild(p);";
+  $("inputCode").value = [
+    "// サンプル：実行結果の欄に \"Hello Obfuscation!\" を表示する",
+    "console.log(\"Hello Obfuscation!\");",
+    "const p = document.createElement(\"p\");",
+    "p.textContent = \"✅ 実行されました\";",
+    "document.body.appendChild(p);",
+  ].join("\n");
   function validateKey() {
     const result = ObfuscatorCore.parseShift($("key").value);
     const message = result.ok ? "" : result.reason === "empty" ?
@@ -129,25 +135,65 @@ function init() {
 
 // タブ切り替え機能
 function initTabs() {
-  const tabButtons = document.querySelectorAll(".tab-button");
-  const tabContents = document.querySelectorAll(".tab-content");
-
-  tabButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      const targetTab = button.getAttribute("data-tab");
-      
-      // すべてのタブボタンとコンテンツから active を除去
-      tabButtons.forEach(btn => btn.classList.remove("active"));
-      tabContents.forEach(content => content.classList.remove("active"));
-      
-      // クリックされたタブをアクティブに
-      button.classList.add("active");
-      const targetContent = document.getElementById(targetTab);
-      if (targetContent) {
-        targetContent.classList.add("active");
-      }
+  const buttons = [...document.querySelectorAll(".tab-button")];
+  function activate(button) {
+    for (const tab of buttons) {
+      const selected = tab === button;
+      tab.classList.toggle("active", selected);
+      tab.setAttribute("aria-selected", String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      $(tab.dataset.tab).classList.toggle("active", selected);
+    }
+  }
+  buttons.forEach((button, index) => {
+    button.addEventListener("click", () => activate(button));
+    button.addEventListener("keydown", (event) => {
+      let next = index;
+      if (event.key === "ArrowRight") next = (index + 1) % buttons.length;
+      else if (event.key === "ArrowLeft") next = (index + buttons.length - 1) % buttons.length;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = buttons.length - 1;
+      else return;
+      event.preventDefault();
+      activate(buttons[next]);
+      buttons[next].focus();
     });
   });
+}
+
+// Dialog focus stays inside the active overlay and returns to its opener.
+function openDialog(overlay, first) {
+  overlay.returnFocus = document.activeElement;
+  overlay.classList.add("active");
+  for (const element of document.querySelectorAll("body > header, body > main, body > footer")) {
+    element.inert = true;
+  }
+  document.body.classList.add("dialog-open");
+  first.focus();
+}
+
+function closeDialog(overlay) {
+  overlay.classList.remove("active");
+  for (const element of document.querySelectorAll("body > header, body > main, body > footer")) {
+    element.inert = false;
+  }
+  document.body.classList.remove("dialog-open");
+  if (overlay.returnFocus?.isConnected) overlay.returnFocus.focus();
+}
+
+function trapDialogFocus(overlay, event) {
+  if (event.key !== "Tab" || !overlay.classList.contains("active")) return;
+  const buttons = [...overlay.querySelectorAll("button:not(:disabled), a[href], [tabindex='0']")]
+    .filter(element => element.getClientRects().length);
+  const first = buttons[0];
+  const last = buttons[buttons.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
 }
 
 // 表示モード切り替え機能
@@ -156,7 +202,7 @@ function initViewMode() {
   const compareBtn = $("btn-compare-view");
   const normalView = $("normal-view");
   const compareView = $("compare-view");
-  
+
   const inputCode = $("inputCode");
   const outputCode = $("outputCode");
   const inputCodeCompare = $("inputCodeCompare");
@@ -165,7 +211,9 @@ function initViewMode() {
   // 表示モード切り替え
   function switchView(mode) {
     invalidateOutput();
-    
+    normalBtn.setAttribute("aria-pressed", String(mode === "normal"));
+    compareBtn.setAttribute("aria-pressed", String(mode === "compare"));
+
     if (mode === "normal") {
       normalBtn.classList.add("active");
       compareBtn.classList.remove("active");
@@ -176,7 +224,7 @@ function initViewMode() {
       compareBtn.classList.add("active");
       normalView.classList.remove("active");
       compareView.classList.add("active");
-      
+
       // 比較モードに切り替え時、内容を同期
       inputCodeCompare.value = inputCode.value;
       outputCodeCompare.value = outputCode.value;
@@ -192,7 +240,7 @@ function initViewMode() {
     inputCodeCompare.value = inputCode.value;
     invalidateOutput();
   });
-  
+
   inputCodeCompare.addEventListener("input", () => {
     inputCode.value = inputCodeCompare.value;
     invalidateOutput();
@@ -211,9 +259,9 @@ function initTutorial() {
   const prevBtn = $("tutorial-prev");
   const nextBtn = $("tutorial-next");
   const closeBtn = $("tutorial-close");
-  
+
   let currentStep = 0;
-  
+
   const steps = [
     {
       element: "#inputCode",
@@ -242,7 +290,8 @@ function initTutorial() {
     {
       element: ".field.inline",
       title: "便利な機能",
-      content: "<h3>⚡ アクション</h3><p><strong>テスト実行</strong>: その場でコードを実行して動作確認</p><p><strong>コピー</strong>: クリップボードにコピー</p><p><strong>保存</strong>: .jsファイルとしてダウンロード</p>",
+      content: "<h3>⚡ アクション</h3><p><strong>テスト実行</strong>: 隔離した画面で動作確認</p>" +
+        "<p><strong>コピー</strong>: クリップボードにコピー</p><p><strong>保存</strong>: .jsファイルとしてダウンロード</p>",
       position: "top"
     },
     {
@@ -252,89 +301,53 @@ function initTutorial() {
       position: "bottom"
     }
   ];
-  
+
   function showStep(index) {
     if (index < 0 || index >= steps.length) return;
-    
+
     currentStep = index;
     const step = steps[index];
-    
+
     // ステップ番号更新
     stepText.textContent = `Step ${index + 1}/${steps.length}`;
-    
+
     // コンテンツ更新
     content.innerHTML = step.content;
-    
+
     // ボタンの状態更新
     prevBtn.disabled = index === 0;
     nextBtn.textContent = index === steps.length - 1 ? "完了" : "次へ";
-    
-    // ハイライトする要素の位置を取得
-    const element = document.querySelector(step.element);
+
+    const selector = step.element === "#inputCode" && $("compare-view").classList.contains("active")
+      ? "#inputCodeCompare" : step.element === "#outputCode" && $("compare-view").classList.contains("active")
+        ? "#outputCodeCompare" : step.element;
+    const element = document.querySelector(selector);
     if (element) {
+      element.scrollIntoView({ block: "center", behavior: "instant" });
       const rect = element.getBoundingClientRect();
-      
-      // ハイライト枠の位置設定
-      highlight.style.left = rect.left - 5 + "px";
-      highlight.style.top = rect.top - 5 + "px";
-      highlight.style.width = rect.width + 10 + "px";
-      highlight.style.height = rect.height + 10 + "px";
-      
-      // ツールチップの位置計算
-      let tooltipLeft = rect.left;
-      let tooltipTop = rect.top;
-      
-      switch(step.position) {
-        case "right":
-          tooltipLeft = rect.right + 20;
-          tooltipTop = rect.top;
-          break;
-        case "left":
-          tooltipLeft = rect.left - 370;
-          tooltipTop = rect.top;
-          break;
-        case "bottom":
-          tooltipLeft = rect.left;
-          tooltipTop = rect.bottom + 20;
-          break;
-        case "top":
-          tooltipLeft = rect.left;
-          tooltipTop = rect.top - 250;
-          break;
-      }
-      
-      // 画面内に収まるよう調整
-      const tooltipWidth = 400;
-      const tooltipHeight = 250;
-      
-      if (tooltipLeft + tooltipWidth > window.innerWidth) {
-        tooltipLeft = window.innerWidth - tooltipWidth - 20;
-      }
-      if (tooltipLeft < 20) {
-        tooltipLeft = 20;
-      }
-      if (tooltipTop + tooltipHeight > window.innerHeight) {
-        tooltipTop = rect.top - tooltipHeight - 20;
-      }
-      if (tooltipTop < 20) {
-        tooltipTop = 20;
-      }
-      
-      tooltip.style.left = tooltipLeft + "px";
-      tooltip.style.top = tooltipTop + "px";
+      highlight.style.left = Math.max(0, rect.left - 4) + "px";
+      highlight.style.top = Math.max(0, rect.top - 4) + "px";
+      highlight.style.width = Math.min(rect.width + 8, innerWidth - 8) + "px";
+      highlight.style.height = Math.min(rect.height + 8, innerHeight - 8) + "px";
+      const box = tooltip.getBoundingClientRect();
+      const left = Math.max(12, Math.min(rect.left, innerWidth - box.width - 12));
+      const preferredTop = rect.bottom + 16 + box.height <= innerHeight - 12
+        ? rect.bottom + 16 : rect.top - box.height - 16;
+      const top = Math.max(12, Math.min(preferredTop, innerHeight - box.height - 12));
+      tooltip.style.left = left + "px";
+      tooltip.style.top = top + "px";
     }
   }
-  
+
   function startTutorial() {
-    overlay.classList.add("active");
+    openDialog(overlay, closeBtn);
     showStep(0);
   }
-  
+
   function endTutorial() {
-    overlay.classList.remove("active");
-    showToast("チュートリアルを完了しました！");
+    closeDialog(overlay);
   }
-  
+
   // イベントリスナー
   nextBtn.addEventListener("click", () => {
     if (currentStep === steps.length - 1) {
@@ -343,32 +356,33 @@ function initTutorial() {
       showStep(currentStep + 1);
     }
   });
-  
+
   prevBtn.addEventListener("click", () => {
     showStep(currentStep - 1);
   });
-  
+
   closeBtn.addEventListener("click", () => {
-    if (confirm("チュートリアルを終了しますか？")) {
-      endTutorial();
-    }
+    endTutorial();
   });
-  
+
   // ESCキーで閉じる
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && overlay.classList.contains("active")) {
-      if (confirm("チュートリアルを終了しますか？")) {
-        endTutorial();
-      }
+      endTutorial();
     }
   });
-  
+
+  overlay.addEventListener("keydown", event => trapDialogFocus(overlay, event));
+  window.addEventListener("resize", () => {
+    if (overlay.classList.contains("active")) showStep(currentStep);
+  });
+
   // チュートリアルボタンのイベントリスナー
   const tutorialBtn = $("tutorial-btn");
   tutorialBtn.addEventListener("click", () => {
     startTutorial();
   });
-  
+
   // 手動で開始する機能（コンソール用）
   window.startTutorial = startTutorial;
 }
@@ -377,10 +391,11 @@ function initTutorial() {
 function initTheme() {
   const themeToggle = $("theme-toggle");
   const body = document.body;
-  
+
   // 保存されたテーマを読み込み、なければダークモードをデフォルト
-  const savedTheme = localStorage.getItem("theme") || "dark";
-  
+  let savedTheme = "dark";
+  try { savedTheme = localStorage.getItem("theme") || "dark"; } catch { /* Optional setting. */ }
+
   function setTheme(theme) {
     if (theme === "light") {
       body.setAttribute("data-theme", "light");
@@ -389,22 +404,22 @@ function initTheme() {
       body.removeAttribute("data-theme");
       themeToggle.textContent = "☀️";
     }
-    localStorage.setItem("theme", theme);
+    try { localStorage.setItem("theme", theme); } catch { /* Keep the in-memory setting. */ }
   }
-  
+
   function toggleTheme() {
     const currentTheme = body.getAttribute("data-theme") === "light" ? "light" : "dark";
     const newTheme = currentTheme === "light" ? "dark" : "light";
     setTheme(newTheme);
     showToast(`${newTheme === "light" ? "☀️ ライト" : "🌙 ダーク"}モードに切り替えました`);
   }
-  
+
   // 初期テーマを設定
   setTheme(savedTheme);
-  
+
   // クリックイベント
   themeToggle.addEventListener("click", toggleTheme);
-  
+
   // 手動切り替え機能（コンソール用）
   window.setTheme = setTheme;
 }
@@ -414,47 +429,47 @@ function initHelp() {
   const helpBtn = $("help-btn");
   const helpModal = $("help-modal");
   const helpClose = $("help-close");
-  
+
   function showHelp() {
-    helpModal.classList.add("active");
-    document.body.style.overflow = "hidden"; // 背景のスクロールを防止
+    openDialog(helpModal, helpClose);
   }
-  
+
   function hideHelp() {
-    helpModal.classList.remove("active");
-    document.body.style.overflow = ""; // スクロールを復元
+    closeDialog(helpModal);
   }
-  
+
   // イベントリスナー
   helpBtn.addEventListener("click", showHelp);
   helpClose.addEventListener("click", hideHelp);
-  
+
   // モーダル外クリックで閉じる
   helpModal.addEventListener("click", (e) => {
     if (e.target === helpModal) {
       hideHelp();
     }
   });
-  
+
   // ESCキーで閉じる
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && helpModal.classList.contains("active")) {
       hideHelp();
     }
   });
-  
+
+  helpModal.addEventListener("keydown", event => trapDialogFocus(helpModal, event));
+
   // 手動操作用
   window.showHelp = showHelp;
   window.hideHelp = hideHelp;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  
+
   init();
   initTabs();
   initViewMode();
   initTutorial();
   initTheme();
   initHelp();
-  
+
 });
