@@ -246,6 +246,7 @@ def run_case(browser, url, protocol, language, theme, width, blocked=False, repo
         check_share(page, language)
         check_reference(page, language)
         check_presentation(page, language)
+        check_vigenere(page, protocol, language)
         assert not errors, errors
         assert not external, external
         assert not page.evaluate("__csp")
@@ -403,6 +404,122 @@ def check_reference(page, language):
     expect(page.locator("#reference-status")).to_have_attribute("data-code-point-index", "1")
     assert page.locator("iframe").count() == 0
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+
+
+def check_vigenere(page, protocol, language):
+    caesar_source = page.locator("#inputCode").input_value()
+    caesar_key = page.locator("#key").input_value()
+    page.locator("#tab-button-vigenere").click()
+    expect(page.locator("#vig-key")).to_have_value("LEMON")
+    source = "console.log(6 * 7); // 日本語😀\\n"
+    page.locator("#vig-source").fill(source)
+    for invalid in ("", "12", "A B", "Ａ", "ſ", "A" * 129):
+        page.locator("#vig-key").fill(invalid)
+        expect(page.locator("#vig-generate")).to_be_disabled()
+    page.locator("#vig-key").fill(" lemon ")
+    page.locator("#vig-generate").click()
+    snippet = page.locator("#vig-output").input_value()
+    assert snippet == page.evaluate("s => VigenereCore.buildSnippet(s, 'LEMON')", source)
+    assert page.locator("iframe").count() == 0
+    page.locator("#vig-trace-panel").evaluate("e => {e.open = true}")
+    assert page.locator("#vig-trace li").count() == len(source)
+    expect(page.locator("#vig-sizes")).not_to_be_empty()
+    page.locator("#vig-inspect-load").click()
+    expect(page.locator("#vig-restored")).to_be_empty()
+    page.locator("#vig-inspect").click()
+    expect(page.locator("#vig-inspect-status")).to_have_attribute("data-state", "equal")
+    assert page.locator("#vig-restored").text_content() == source
+    page.locator("#vig-source").fill("// different source")
+    expect(page.locator("#vig-output")).to_have_value("")
+    expect(page.locator("#vig-trace li")).to_have_count(0)
+    expect(page.locator("#vig-copy")).to_be_disabled()
+    assert page.locator("#vig-restored").text_content() == source
+    page.locator("#language-btn").click()
+    assert page.locator("#vig-restored").text_content() == source
+    expect(page.locator("#vig-inspect-status")).to_have_attribute("data-state", "equal")
+    page.locator("#language-btn").click()
+    page.locator("#vig-inspect-input").fill(snippet + "\\nalert('not executed')")
+    expect(page.locator("#vig-restored")).to_be_empty()
+    page.locator("#vig-inspect").click()
+    expect(page.locator("#vig-inspect-status")).to_have_attribute("data-state", "invalid")
+    assert page.locator("iframe").count() == 0
+    raw = "A\\r\\nB\\t日本語😀\\u202e"
+    page.locator("#vig-inspect-input").fill(page.evaluate("s => VigenereCore.buildSnippet(s, 'BC')", raw))
+    page.locator("#vig-inspect").click()
+    assert page.locator("#vig-restored").text_content() == raw
+    page.locator("#language-btn").click()
+    assert page.locator("#vig-restored").text_content() == raw
+    page.locator("#language-btn").click()
+    page.locator("#vig-inspect-clear").click()
+    expect(page.locator("#vig-restored")).to_be_empty()
+    for sample_id in ("basic", "ascii-wrap", "unicode", "escapes", "console", "scope"):
+        page.locator("#vig-sample").select_option(sample_id)
+        page.locator("#vig-load").click()
+        expect(page.locator("#vig-key")).to_have_value(" lemon ")
+        page.locator("#vig-generate").click()
+        page.locator("#vig-inspect-load").click()
+        page.locator("#vig-inspect").click()
+        expect(page.locator("#vig-inspect-status")).to_have_attribute("data-state", "equal")
+    page.locator("#vig-clear").click()
+    page.locator("#vig-generate").click()
+    page.locator("#vig-inspect-load").click()
+    page.locator("#vig-inspect").click()
+    expect(page.locator("#vig-inspect-status")).to_have_attribute("data-state", "equal")
+    expect(page.locator("#vig-restored")).to_be_empty()
+    page.locator("#vig-source").fill("A" * 205)
+    page.locator("#vig-generate").click()
+    expect(page.locator("#vig-trace li")).to_have_count(200)
+    page.evaluate("""Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{
+        writeText:async()=>{throw Error('denied')}
+    }})""")
+    page.locator("#vig-copy").click()
+    expect(page.locator("#vig-status")).to_have_text(page.evaluate("ObfuscatorI18n.t('vigCopyManual')"))
+    for succeeds in (True, False):
+        page.locator("#vig-generate").click()
+        page.evaluate("""Object.defineProperty(navigator, 'clipboard', {configurable:true, value:{
+            writeText:()=>new Promise((resolve,reject)=>{window.__vigResolve=resolve;window.__vigReject=reject})
+        }})""")
+        page.locator("#vig-copy").click()
+        page.locator("#vig-key").fill("A" if succeeds else "BC")
+        status = page.locator("#vig-status").text_content()
+        page.evaluate("ok => ok ? __vigResolve() : __vigReject(Error('late'))", succeeds)
+        expect(page.locator("#vig-status")).to_have_text(status)
+        expect(page.locator("#vig-output")).to_have_value("")
+    page.locator("#vig-source").fill(source)
+    page.locator("#vig-generate").click()
+    with page.expect_download() as downloaded:
+        page.locator("#vig-download").click()
+    assert downloaded.value.suggested_filename == "vigenere-obfuscated.js"
+    assert Path(downloaded.value.path()).read_text(encoding="utf-8") == page.locator("#vig-output").input_value()
+    page.locator("#vig-run-panel").evaluate("e => {e.open = true}")
+    if protocol == "http":
+        page.locator("#vig-run").click()
+        expect(page.locator("#vig-run-result")).to_contain_text("42")
+        expect(page.locator("#vig-host iframe")).to_have_attribute("sandbox", "allow-scripts")
+        page.locator("#tab-button-caesar").click()
+        assert page.locator("iframe").count() == 0
+        page.locator("#tab-button-vigenere").click()
+    else:
+        expect(page.locator("#vig-run")).to_be_disabled()
+        expect(page.locator("#vig-protocol-note")).to_be_visible()
+    page.locator("#language-btn").click()
+    expect(page.locator("#vig-output")).to_have_value("")
+    page.locator("#language-btn").click()
+    page.locator("#vig-reset").click()
+    expect(page.locator("#vig-key")).to_have_value("LEMON")
+    expect(page.locator("#vig-source")).to_have_value(page.evaluate("Samples.get('basic', ObfuscatorI18n.language).source"))
+    for link in page.locator(".vig-links a").all():
+        assert link.get_attribute("rel") == "noopener noreferrer"
+        assert link.get_attribute("target") == "_blank"
+        assert not urlsplit(link.get_attribute("href")).query
+        assert not urlsplit(link.get_attribute("href")).fragment
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    page.locator("#tab-button-vigenere").focus()
+    page.keyboard.press("ArrowLeft")
+    expect(page.locator("#tab-button-caesar")).to_be_focused()
+    expect(page.locator("#inputCode")).to_have_value(caesar_source)
+    expect(page.locator("#key")).to_have_value(caesar_key)
+    assert page.locator("iframe").count() == 0
 
 
 if __name__ == "__main__":

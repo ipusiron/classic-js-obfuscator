@@ -426,6 +426,72 @@ details.warn code {
   color: var(--warning-text);
 }
 
+/* Independent Vigenere panel: stacked controls and bounded, safe trace tokens. */
+.vig-layout {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+}
+
+.vig-layout > *, .vig-layout details > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vig-layout > h2, .vig-layout > p {
+  margin: 0;
+}
+
+.vig-layout label {
+  display: block;
+  margin-block: 8px;
+}
+
+.vig-layout input, .vig-layout select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+}
+
+.vig-layout summary {
+  min-height: 44px;
+  padding-block: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.vig-trace {
+  list-style: none;
+  padding: 0;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.vig-trace li {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+  font-family: monospace;
+}
+
+.vig-links {
+  padding-left: 20px;
+}
+
+.vig-links a {
+  display: block;
+  min-height: 44px;
+  padding-block: 12px;
+  overflow-wrap: anywhere;
+  color: var(--accent);
+}
+
 /* タブスタイル */
 .tabs {
   display: flex;

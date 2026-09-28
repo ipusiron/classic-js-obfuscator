@@ -4,17 +4,18 @@ This file provides guidance to coding agents working in this repository.
 
 ## Project Overview
 
-Classic JS Obfuscator is a web-based tool that generates self-decrypting JavaScript snippets using classical cryptography (Caesar cipher). The tool creates obfuscated JavaScript code that can decrypt and execute itself using an embedded decryption function.
+Classic JS Obfuscator generates self-decoding JavaScript snippets using Caesar or a repeating-key ASCII95 Vigenere variant. The embedded decoder restores and indirectly evaluates the original source.
 
 ## Architecture
 
 This is a simple static web application with no build system or runtime dependencies:
 
-- **index.html**: Accessible tab-based UI, result area, dialogs, and parent-page CSP (Caesar implemented, Vigenère placeholder)
+- **index.html**: Accessible independent Caesar/Vigenere tabs, result areas, dialogs, and parent-page CSP
 - **script.js**: DOM events, editor-state transitions, strict key validation, output freshness, learning integration, copy/download actions, dialogs, and settings initialization
 - **js/obfuscator-core.js**: DOM-free Caesar conversion, string escaping, key parsing, snippet generation, code-point statistics, and entropy; classic-script global `ObfuscatorCore` plus CommonJS export
 - **js/learning-core.js**: Pure fixed-format inspection, exact source comparison, transformation traces, size decomposition and frequencies; classic global `LearningCore` and CommonJS, reusing `ObfuscatorCore`
 - **js/learning-ui.js**: Text-only learning views, generated-result invalidation and an independent non-executing inspector; classic global `LearningUI` and CommonJS
+- **js/vigenere-core.js**, **js/vigenere-ui.js**: ASCII95 repeating-key transform, strict seven-line non-executing recovery and an independent editor/inspector
 - **js/samples.js**: Six frozen bilingual sample definitions and stable IDs; classic global `Samples` and CommonJS
 - **js/editor-state.js**: Immutable input, raw key, sample provenance and a single consumable restore point; classic global `EditorState` and CommonJS
 - **js/quiz-data.js**, **js/quiz-core.js**, **js/quiz-ui.js**: Twelve frozen bilingual questions, immutable grading state and explicit sample loading
@@ -79,15 +80,23 @@ The comparison and quiz paths are non-executing and code-free sharing adds no ne
 - Browser validation must include stale-output rejection, invalid keys, storage unavailable, keyboard dialogs/tabs, tutorial visibility, and iframe isolation
 - Learning tests cover all 95 keys, accepted/rejected envelopes, Unicode and lone surrogates, limit boundaries, size equations, frequency invariance, frozen samples and one-step state transitions
 - UI/browser checks must cover both editors, every invalidation path, load provenance, same-text manual input, failure cleanup, language-preserved inspection and forbidden execution paths
-- README tests retain the metadata digest and known examples, check all 35 corresponding headings, recalculate marked tables and validate all seven screenshots and inventory
+- README tests retain the metadata digest and known examples, check all 36 corresponding headings, recalculate marked tables and validate all nine screenshots and inventory
 - Keep source formatted for review; CSS/JavaScript lines are limited to 160 characters and HTML to 250
 - Theme initialization runs before CSS and body parsing; later controls update that same root without rereading storage. Keep the dark default for unset/invalid/unavailable storage. Never add inline script or weaken CSP. Browser checks pause main-script loading and verify the prepaint colors in twelve HTTP/file cases.
 - Keep `.claude/` ignored and do not commit personal paths, local settings, or code entered during testing
 - Uses GitHub Pages for deployment at https://ipusiron.github.io/classic-js-obfuscator/
 - The tool is part of the "100 Security Tools with AI" project (Day 042)
-- Vigenère cipher tab is intentionally unimplemented (placeholder for future enhancement)
+- Both cipher tabs are implemented; Vigenere is an ASCII95 variant, not ordinary 26-letter ciphertext
 
 ## Security Considerations
+
+### Vigenere contracts
+
+Trim surrounding key whitespace, validate 1–128 ASCII letters before uppercase conversion, and preserve the raw field while typing. A=0 through Z=25; only printable ASCII 32–126 advances the repeating key. Tabs, line breaks, non-ASCII and lone surrogates pass unchanged. Empty source is valid. Source, generated snippet and inspector input each have a 2,000,000 UTF-16-unit limit; reject expansion above the output limit. Trace at most 200 code points using safe numeric labels. Single D must equal Caesar shift 3. Keep the independent fixture exact.
+
+Generation, sample load, source clear, reset and language change invalidate output, trace, sizes, execution and pending clipboard feedback. Selecting a sample alone changes no source. Load and clear preserve the key; reset loads the current-language basic sample and LEMON. Language changes preserve source text and raw recovered strings. Inspector loading captures the exact generated source and never runs inspection or code automatically; manual inspector input drops provenance and recovery, failures drop prior recovery. No implicit editor writeback.
+
+Each tab uses the existing SandboxRunner without changing its security contract. Tab activation destroys both frames, including frames whose synchronous work finished. The Caesar tutorial activates the Caesar tab before showing targets. Fixed related-Day links contain no user data; explain the 26/95-alphabet incompatibility. Quizzes, URL sharing, detailed frequencies, one-step restore and the independent reference panel remain Caesar-only. Add no runtime or test dependencies.
 
 This is an educational tool demonstrating classical cryptography for code obfuscation. The generated code uses `eval` for self-execution, which has security implications. The obfuscation provides only readability reduction, not true security - the original code can be recovered through static analysis.
 

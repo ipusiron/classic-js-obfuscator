@@ -92,6 +92,9 @@ for (const theme of ["dark", "light"]) {
     checkPair("muted labels and placeholders", variables["--muted"], [page, card], variables);
     const sampleSelect = declarations(".sample-panel select");
     checkPair("sample select", sampleSelect.color, backgrounds(sampleSelect.background, variables, card), variables);
+    const vigenereInput = declarations(".vig-layout input");
+    checkPair("Vigenere input", vigenereInput.color, backgrounds(vigenereInput.background, variables, card), variables);
+    checkPair("Vigenere learning links", declarations(".vig-links a").color, [card], variables);
     const learningBackgrounds = [card, color(variables["--input-bg"])];
     for (const selector of [".learning-lab", ".lab-status", ".lab-row", ".lab-pair dt", ".lab-pair dd", ".lab-formula"]) {
       checkPair(selector, declarations(selector).color, learningBackgrounds, variables);

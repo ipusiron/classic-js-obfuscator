@@ -10,10 +10,10 @@ English · [日本語](README.md)
 
 **Day042 - 100 Security Tools with Generative AI**
 
-**Classic JS Obfuscator** generates JavaScript snippets transformed with a classical cipher, the Caesar cipher.
+**Classic JS Obfuscator** generates JavaScript snippets transformed with Caesar or a repeating-key ASCII95 Vigenere variant.
 The embedded decoder and `eval` make each snippet **self-decoding and self-executing**.
 
-The interface has two tabs: Caesar is implemented, while Vigenère remains unimplemented.
+The Caesar and Vigenere tabs each have an independent source editor and non-executing inspector.
 In-page execution takes place in a sandbox iframe isolated from the parent page. This is a learning tool for trusted samples, not a way to protect secrets or determine whether suspicious code is safe.
 
 ---
@@ -25,6 +25,14 @@ In-page execution takes place in a sandbox iframe isolated from the parent page.
 ---
 
 ## 📸 Screenshots
+
+> ![Japanese Vigenere tab in the light theme](assets/vigenere.png)
+>
+> *JavaScript generation with alphabetic key LEMON in Japanese*
+
+> ![English non-executing Vigenere recovery in the dark theme](assets/en/vigenere.png)
+>
+> *Exact non-executing recovery and links to other learning tools in English*
 
 > ![English normal view in the light theme](assets/en/screenshot.png)
 >
@@ -61,6 +69,7 @@ In-page execution takes place in a sandbox iframe isolated from the parent page.
 ### 🔐 Cipher features
 
 - **Caesar transformation**: Shift the 95 printable ASCII characters from 32 through 126
+- **Vigenere transformation**: Shift printable ASCII with a repeating alphabetic key; incompatible with the usual 26-letter variant
 - **Self-decoding snippets**: An IIFE containing the decoder and transformed payload
 - **Shift selection**: Integers from 0 through 94; 0 leaves characters unchanged, and a larger shift does not mean stronger encryption
 - **JavaScript output**: Use only after checking the destination's CSP and scope requirements
@@ -90,7 +99,8 @@ In-page execution takes place in a sandbox iframe isolated from the parent page.
 - **Settings share URL**: Share no code; review received settings before applying them together
 - **Independent reference code**: Compare restored text and show context around its first mismatch
 
-Whitespace surrounding the key is trimmed, and leading zeroes are accepted. An empty key is distinct from shift 0.
+Comparison mode, frequencies, one-step restore, quizzes, settings sharing and the independent reference-code panel above are Caesar features.
+Whitespace surrounding a Caesar key is trimmed, and leading zeroes are accepted. An empty key is distinct from shift 0.
 
 ### 🛡️ Security measures
 
@@ -370,6 +380,56 @@ Unrelated anchors are ignored.
 Changing settings clears the generated URL; a change during asynchronous copying suppresses a stale success message.
 When clipboard permission is denied, the selected URL can be copied manually.
 
+### Using the Vigenere tab
+
+1. Open the Vigenere tab and enter JavaScript and an alphabetic key.
+2. Generate the snippet, then copy or save it as JavaScript if needed.
+3. Open key-to-character alignment to inspect the first 200 code points and key positions.
+4. Load generated output into the inspector, then restore without running to compare with the captured original source.
+5. Only when execution is wanted, open execution results and test trusted code in the HTTP(S) sandbox.
+
+Keys contain 1–128 English letters; surrounding whitespace is removed and letters are normalized to uppercase internally.
+Digits, symbols, internal whitespace and full-width letters are rejected.
+Shifts repeat from A=0 through Z=25; a single D transforms text just like Caesar shift 3.
+A key containing only A leaves source characters unchanged.
+Spaces and punctuation within ASCII 32–126 advance the key, but newlines, tabs, non-Latin text and emoji pass unchanged without advancing it.
+This checked-in test vector uses JSON escape notation.
+
+<!-- vigenere-vector:start -->
+```json
+{"source":"A\nB\tC日本語😀D","key":"BC","payload":"B\nD\tD日本語😀F"}
+```
+<!-- vigenere-vector:end -->
+
+An empty source is valid.
+Source, generated output and inspection input each have a limit of 2,000,000 UTF-16 units.
+Generation is also rejected when escaping makes the output exceed that limit.
+Sizes are shown as code points, UTF-16 units and UTF-8 bytes.
+Lone surrogates remain unchanged in memory but become U+FFFD on UTF-8 saving.
+Pasting into a textarea normalizes CRLF and CR to LF.
+
+The six existing samples are reused; explicit loading replaces only the source and preserves the alphabetic key.
+Clearing the source preserves the key; reset loads the current-language basic sample and key LEMON.
+Changing language preserves the current source text and invalidates generated output.
+The independent inspector retains its raw restored string across language changes.
+Manually entered snippets have no captured-source comparison; altered envelopes or extra code are rejected.
+Recovery and equality prove neither syntax validity nor execution safety.
+Changing tabs destroys both tabs' execution frames.
+Generation, inspection and saving work over file://; isolated execution requires HTTP(S).
+
+Explore principles and analysis with these tools.
+Links open in separate tabs without sending source, keys or output.
+
+- [Day017 Vigenere Cipher Tool](https://ipusiron.github.io/vigenere-cipher-tool/): 26-letter principles and tabula recta
+- [Day028 RepeatSeq Analyzer](https://ipusiron.github.io/repeatseq-analyzer/): repeated sequences and key-length estimation
+- [Day030 ModularTextDivider](https://ipusiron.github.io/modular-text-divider/): periodic column splitting
+- [Day047 IC Learning Visualizer](https://ipusiron.github.io/ic-learning-visualizer/): index of coincidence
+
+Day042 uses ASCII95, so its ciphertext is incompatible with the 26-letter variant.
+Do not apply those tools' statistics or estimates directly to ASCII95 JavaScript.
+Settings sharing, quizzes, one-step restore, detailed frequency analysis and the separate reference-code panel remain Caesar-only.
+Keys are included in generated snippets: this does not protect secrets.
+
 ## ⚠️ Cautions
 
 - This tool demonstrates obfuscation, meaning reduced readability, rather than confidentiality.
@@ -447,7 +507,7 @@ The character-count ratio is the generated length divided by the original length
 
 The following items appeared in the earlier project plans. None is implemented or included in this improvement. They are possibilities, not a promised schedule; future work will be selected for its defensive and educational value.
 
-- **Additional ciphers**: A possible teaching aid for comparing classical transformation rules
+- **Further ciphers**: A possible teaching aid beyond the implemented Caesar and Vigenere variants
 - **Layered transformations**: An unimplemented item from the earlier plans
 - **Key obfuscation**: An unimplemented idea, not a guarantee of key confidentiality
 - **Unicode support**: A possible lesson about the transformed character range, distinct from the current preservation of out-of-range characters
@@ -523,11 +583,13 @@ classic-js-obfuscator/               # Project root
 │   ├── en/                          # English-language screenshots
 │   │   ├── screenshot.png           # English normal view in the light theme
 │   │   ├── screenshot2.png          # English learning lab in the light theme
-│   │   └── screenshot3.png          # English learning quiz in the dark theme
+│   │   ├── screenshot3.png          # English learning quiz in the dark theme
+│   │   └── vigenere.png             # English Vigenere recovery in the dark theme
 │   ├── screenshot.png               # Japanese normal view in the light theme
 │   ├── screenshot2.png              # Japanese learning lab in the dark theme
 │   ├── screenshot3.png              # Japanese mismatch context in the light theme
-│   └── screenshot4.png              # Japanese shared-settings preview in the light theme
+│   ├── screenshot4.png              # Japanese shared-settings preview in the light theme
+│   └── vigenere.png                 # Japanese Vigenere generation in the light theme
 ├── CLAUDE.md                        # Development structure and working rules
 ├── index.html                       # Interface structure and parent CSP
 ├── js/                              # Shared modules
@@ -544,7 +606,9 @@ classic-js-obfuscator/               # Project root
 │   ├── sandbox-runner.js            # Frame lifecycle and message validation
 │   ├── share-settings.js            # Code-free shared settings grammar
 │   ├── share-ui.js                  # Share URL creation and explicit application
-│   └── theme-init.js                # Apply the saved theme before first paint
+│   ├── theme-init.js                # Apply the saved theme before first paint
+│   ├── vigenere-core.js             # Repeating-key ASCII95 transforms and non-executing recovery
+│   └── vigenere-ui.js               # Independent Vigenere editor and recovery interface
 ├── LICENSE                          # MIT license
 ├── package.json                     # Dependency-free test commands
 ├── README.en.md                     # Complete English version
@@ -567,7 +631,8 @@ classic-js-obfuscator/               # Project root
     ├── fixtures/                    # Fixed reference data
     │   ├── expect.json              # Reference outputs and known answers
     │   ├── learning-expect.json     # Fixed reference values for learning helpers
-    │   └── phase3-expect.json       # Immutable Phase 3 reference data
+    │   ├── phase3-expect.json       # Immutable Phase 3 reference data
+    │   └── vigenere-expect.json     # Fixed Vigenere-variant reference values
     ├── format.test.js               # UTF-8, line lengths and readable formatting
     ├── html.test.js                 # CSP, HTML, ARIA and local assets
     ├── i18n.test.js                 # Language dictionaries and display parity
@@ -580,7 +645,8 @@ classic-js-obfuscator/               # Project root
     ├── share.test.js                # Share URL grammar and atomic apply
     ├── snippet.test.js              # Execution, escaping and scope
     ├── theme.test.js                # Initial theme and unavailable storage checks
-    └── ui.test.js                   # Clipboard waits and interface state changes
+    ├── ui.test.js                   # Clipboard waits and interface state changes
+    └── vigenere.test.js             # Alphabetic keys and ASCII95 transformation tests
 ```
 <!-- inventory:end -->
 
