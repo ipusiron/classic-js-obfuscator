@@ -19,132 +19,102 @@ function showToast(message, isError = false) {
   }, 2500);
 }
 
+let outputSource = null;
+let outputShift = null;
+
+function invalidateOutput() {
+  outputSource = null;
+  outputShift = null;
+  $("outputCode").value = "";
+  $("outputCodeCompare").value = "";
+  $("output-stats").textContent = "";
+  for (const id of ["btn-run", "btn-copy", "btn-download"]) $(id).disabled = true;
+  $("output-status").textContent = "入力や設定を変更しました。再生成してください。";
+}
+
+function hasFreshOutput() {
+  const key = ObfuscatorCore.parseShift($("key").value);
+  return key.ok && outputSource === $("inputCode").value &&
+    outputShift === key.value && $("outputCode").value !== "";
+}
+
 function init() {
-  // サンプルをセット
-  $("inputCode").value =
-`// サンプル：ページに "Hello Obfuscation!" を表示
-console.log("Hello Obfuscation!");
-document.body.insertAdjacentHTML("beforeend", "<div style=\\"padding:8px;margin-top:8px;background:#0d1530;border:1px solid #23304f;border-radius:8px;color:#e8ecf1\\">✅ 実行されました</div>");`;
-
-  // 出力依存ボタンの状態を更新
-  function updateOutputButtons() {
-    const hasOutput = $("outputCode").value.trim() !== "";
-    $("btn-run").disabled = !hasOutput;
-    $("btn-copy").disabled = !hasOutput;
-    $("btn-download").disabled = !hasOutput;
-  }
-
-  // シフト量の検証
+  $("inputCode").value = "// サンプル：実行結果の欄に \"Hello Obfuscation!\" を表示する\nconsole.log(\"Hello Obfuscation!\");\nconst p = document.createElement(\"p\");\np.textContent = \"✅ 実行されました\";\ndocument.body.appendChild(p);";
   function validateKey() {
-    const keyInput = $("key");
-    const errorMsg = $("key-error");
-    const generateBtn = $("btn-generate");
-    const key = Number(keyInput.value);
-    
-    if (isNaN(key) || key < 0 || key > 94 || !Number.isInteger(key)) {
-      console.warn("⚠️ 無効なシフト量:", keyInput.value);
-      errorMsg.innerHTML = "⚠️ 0〜94の整数を入力してください";
-      errorMsg.classList.add("show");
-      generateBtn.disabled = true;
-      return false;
-    } else {
-      errorMsg.innerHTML = "";
-      errorMsg.classList.remove("show");
-      generateBtn.disabled = false;
-      return true;
-    }
+    const result = ObfuscatorCore.parseShift($("key").value);
+    const message = result.ok ? "" : result.reason === "empty" ?
+      "シフト量を入力してください。" : "0〜94の整数を半角数字で入力してください。";
+    $("key-error").textContent = message;
+    $("key-error").classList.toggle("show", !result.ok);
+    $("key").setAttribute("aria-invalid", String(!result.ok));
+    $("btn-generate").disabled = !result.ok;
+    return result;
   }
-
-  // 初期状態をチェック
+  invalidateOutput();
+  $("output-status").textContent = "入力とシフト量を指定し、コードを生成してください。";
   validateKey();
-  updateOutputButtons();
-
-  $("key").addEventListener("input", validateKey);
-
+  $("key").addEventListener("input", () => {
+    invalidateOutput();
+    validateKey();
+  });
   $("btn-generate").addEventListener("click", () => {
-    console.group("🎯 生成ボタンクリック");
-    
-    if (!validateKey()) {
-      console.log("❌ バリデーションエラー");
-      console.groupEnd();
-      return;
-    }
-    
-    const key = Number($("key").value) || 0;
-    const src = $("inputCode").value || "";
-    
-    console.log("入力コード長:", src.length, "文字");
-    console.log("使用シフト量:", key);
-    console.time("生成処理時間");
-    
-    const out = buildObfuscatedSnippet(src, key);
-    
-    console.timeEnd("生成処理時間");
-    console.log("出力コード長:", out.length, "文字");
-    
-    $("outputCode").value = out;
-    // 比較モードの出力も更新
-    if ($("outputCodeCompare")) {
-      $("outputCodeCompare").value = out;
-      console.log("比較モードの出力も更新");
-    }
-    updateOutputButtons();
-    
-    console.log("✅ 生成完了");
-    console.groupEnd();
+    const result = validateKey();
+    if (!result.ok) return;
+    const source = $("inputCode").value;
+    const snippet = buildObfuscatedSnippet(source, result.value);
+    $("outputCode").value = snippet;
+    $("outputCodeCompare").value = snippet;
+    outputSource = source;
+    outputShift = result.value;
+    const count = ObfuscatorCore.stats(source, snippet);
+    $("output-stats").textContent =
+      `元コード ${count.length}文字 → 生成物 ${count.snippetLength}文字（文字数比 ${count.ratio ?? "—"}%）`;
+    $("output-status").textContent = result.noop ?
+      "シフト0は文字を変換しません。出力は現在の入力に対応しています。" : "生成しました。出力は現在の入力に対応しています。";
+    for (const id of ["btn-run", "btn-copy", "btn-download"]) $(id).disabled = false;
   });
-
   $("btn-copy").addEventListener("click", async () => {
-    const out = $("outputCode").value;
-    if (!out) return;
+    if (!hasFreshOutput()) return;
     try {
-      await navigator.clipboard.writeText(out);
-      showToast("✅ コピーしました");
+      await navigator.clipboard.writeText($("outputCode").value);
+      showToast("コピーしました。");
     } catch {
-      showToast("❌ コピーに失敗しました。手動で選択してください。", true);
+      const field = $("normal-view").classList.contains("active") ? $("outputCode") : $("outputCodeCompare");
+      field.focus();
+      field.select();
+      if (document.execCommand("copy")) showToast("コピーしました。");
+      else showToast("コピーできませんでした。選択した出力を手動でコピーしてください。", true);
     }
   });
-
   $("btn-download").addEventListener("click", () => {
-    const out = $("outputCode").value;
-    if (!out) return;
-    const blob = new Blob([out], { type: "application/javascript;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "obfuscated.js";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(a.href);
+    if (!hasFreshOutput()) return;
+    const blob = new Blob([$("outputCode").value], { type: "application/javascript;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "obfuscated.js";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 
   $("btn-run").addEventListener("click", () => {
+    if (!hasFreshOutput()) return;
     const out = $("outputCode").value;
-    if (!out) return;
     
-    console.group("🚀 テスト実行");
-    console.log("実行するコード:");
-    console.log(out.substring(0, 200) + (out.length > 200 ? "..." : ""));
-    console.log("コードサイズ:", out.length, "文字");
     
     try {
-      console.log("⏳ 実行開始...");
-      console.time("実行時間");
       
       // そのまま eval（生成物の挙動確認）
       // 注意：教材用途。安全なコードでのみ実行してください。
       // eslint-disable-next-line no-eval
       eval(out);
       
-      console.timeEnd("実行時間");
-      console.log("✅ 実行成功");
     } catch (e) {
-      console.timeEnd("実行時間");
-      console.error("❌ 実行エラー:", e);
       alert("実行中にエラーが発生しました。コンソールを確認してください。");
     }
     
-    console.groupEnd();
   });
 }
 
@@ -185,7 +155,7 @@ function initViewMode() {
 
   // 表示モード切り替え
   function switchView(mode) {
-    console.log(`📊 表示モード切替: ${mode}`);
+    invalidateOutput();
     
     if (mode === "normal") {
       normalBtn.classList.add("active");
@@ -201,7 +171,6 @@ function initViewMode() {
       // 比較モードに切り替え時、内容を同期
       inputCodeCompare.value = inputCode.value;
       outputCodeCompare.value = outputCode.value;
-      console.log("比較モードへデータ同期完了");
     }
   }
 
@@ -212,10 +181,12 @@ function initViewMode() {
   // 通常モードと比較モードの入力を同期
   inputCode.addEventListener("input", () => {
     inputCodeCompare.value = inputCode.value;
+    invalidateOutput();
   });
   
   inputCodeCompare.addEventListener("input", () => {
     inputCode.value = inputCodeCompare.value;
+    invalidateOutput();
   });
 
   // 出力の同期（生成ボタンクリック時に自動で同期されるため、ここでは読み取り専用）
@@ -348,12 +319,10 @@ function initTutorial() {
   function startTutorial() {
     overlay.classList.add("active");
     showStep(0);
-    console.log("📚 チュートリアル開始");
   }
   
   function endTutorial() {
     overlay.classList.remove("active");
-    console.log("✅ チュートリアル完了");
     showToast("チュートリアルを完了しました！");
   }
   
@@ -407,11 +376,9 @@ function initTheme() {
     if (theme === "light") {
       body.setAttribute("data-theme", "light");
       themeToggle.textContent = "🌙";
-      console.log("🌞 ライトモードに切り替え");
     } else {
       body.removeAttribute("data-theme");
       themeToggle.textContent = "☀️";
-      console.log("🌙 ダークモードに切り替え");
     }
     localStorage.setItem("theme", theme);
   }
@@ -442,13 +409,11 @@ function initHelp() {
   function showHelp() {
     helpModal.classList.add("active");
     document.body.style.overflow = "hidden"; // 背景のスクロールを防止
-    console.log("📖 ヘルプモーダル表示");
   }
   
   function hideHelp() {
     helpModal.classList.remove("active");
     document.body.style.overflow = ""; // スクロールを復元
-    console.log("📖 ヘルプモーダル非表示");
   }
   
   // イベントリスナー
@@ -475,8 +440,6 @@ function initHelp() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🌟 Classic JS Obfuscator 初期化開始");
-  console.log("ブラウザ:", navigator.userAgent);
   
   init();
   initTabs();
@@ -485,9 +448,4 @@ document.addEventListener("DOMContentLoaded", () => {
   initTheme();
   initHelp();
   
-  console.log("✅ 初期化完了");
-  console.log("📋 使い方: 開発者ツールのコンソールで暗号化プロセスの詳細を確認できます");
-  console.log("💡 チュートリアルを再度見るには: startTutorial() を実行");
-  console.log("🎨 テーマ切り替え: setTheme('light') または setTheme('dark')");
-  console.log("📖 ヘルプ表示: showHelp() を実行");
 });

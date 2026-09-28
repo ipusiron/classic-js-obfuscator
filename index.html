@@ -122,7 +122,7 @@
       <section class="controls">
         <div class="field-inline-label">
           <label for="key">🔑 シフト量（0〜94の整数）</label>
-          <input id="key" type="number" value="3" min="0" max="94" />
+          <input id="key" type="text" inputmode="numeric" value="3" aria-describedby="key-error" />
         </div>
         <div id="key-error" class="error-message"></div>
         <div class="field inline">
@@ -132,6 +132,8 @@
           <button id="btn-download">.js で保存</button>
         </div>
         <p class="note">※ ASCII 32–126 のみシフト対象／それ以外（日本語など）は無変換で通過</p>
+        <p id="output-status" class="note" role="status"></p>
+        <p id="output-stats" class="note"></p>
       </section>
 
       <section class="io">
