@@ -19,10 +19,13 @@ function showToast(message, isError = false) {
   }, 2500);
 }
 
+let runner = null;
 let outputSource = null;
 let outputShift = null;
 
 function invalidateOutput() {
+  if (runner) runner.reset();
+  $("run-result").textContent = "";
   outputSource = null;
   outputShift = null;
   $("outputCode").value = "";
@@ -39,6 +42,20 @@ function hasFreshOutput() {
 }
 
 function init() {
+  runner = new SandboxRunner({ host: $("run-host"), onResult: (result) => {
+    if (result.kind === "log" || result.kind === "error") {
+      $("run-result").textContent += result.text + "\n";
+    } else if (result.kind === "timeout") {
+      $("run-result").textContent += "実行を終了しました。時間制限を超えました。\n";
+    } else if (result.kind === "done") {
+      $("run-result").textContent += "実行完了\n";
+    }
+  }, onState: (state) => {
+    $("btn-run").disabled = state === "running" || !hasFreshOutput() || !SandboxRunner.supported;
+  } });
+  $("run-notice").textContent = SandboxRunner.supported ?
+    "信頼できるコードだけを実行してください。実行画面は毎回初期化されます。" :
+    "ファイルを直接開いた場合は実行できません。HTTPで開くと実行できます。生成・コピー・保存は利用できます。";
   $("inputCode").value = "// サンプル：実行結果の欄に \"Hello Obfuscation!\" を表示する\nconsole.log(\"Hello Obfuscation!\");\nconst p = document.createElement(\"p\");\np.textContent = \"✅ 実行されました\";\ndocument.body.appendChild(p);";
   function validateKey() {
     const result = ObfuscatorCore.parseShift($("key").value);
@@ -60,6 +77,8 @@ function init() {
   $("btn-generate").addEventListener("click", () => {
     const result = validateKey();
     if (!result.ok) return;
+    runner.reset();
+    $("run-result").textContent = "";
     const source = $("inputCode").value;
     const snippet = buildObfuscatedSnippet(source, result.value);
     $("outputCode").value = snippet;
@@ -71,7 +90,8 @@ function init() {
       `元コード ${count.length}文字 → 生成物 ${count.snippetLength}文字（文字数比 ${count.ratio ?? "—"}%）`;
     $("output-status").textContent = result.noop ?
       "シフト0は文字を変換しません。出力は現在の入力に対応しています。" : "生成しました。出力は現在の入力に対応しています。";
-    for (const id of ["btn-run", "btn-copy", "btn-download"]) $(id).disabled = false;
+    for (const id of ["btn-copy", "btn-download"]) $(id).disabled = false;
+    $("btn-run").disabled = !SandboxRunner.supported;
   });
   $("btn-copy").addEventListener("click", async () => {
     if (!hasFreshOutput()) return;
@@ -100,21 +120,10 @@ function init() {
   });
 
   $("btn-run").addEventListener("click", () => {
-    if (!hasFreshOutput()) return;
-    const out = $("outputCode").value;
-    
-    
-    try {
-      
-      // そのまま eval（生成物の挙動確認）
-      // 注意：教材用途。安全なコードでのみ実行してください。
-      // eslint-disable-next-line no-eval
-      eval(out);
-      
-    } catch (e) {
-      alert("実行中にエラーが発生しました。コンソールを確認してください。");
-    }
-    
+    if (!hasFreshOutput() || !SandboxRunner.supported) return;
+    $("run-result").textContent = "";
+    $("btn-run").disabled = true;
+    runner.run($("outputCode").value);
   });
 }
 

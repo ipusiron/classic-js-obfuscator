@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; connect-src 'none'; frame-src 'self'" />
+  <meta name="referrer" content="no-referrer" />
   <title>Classic JS Obfuscator</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <noscript>JavaScriptを有効にしてください。 / Please enable JavaScript.</noscript>
   <div id="toast" class="toast"></div>
   
   <!-- ヘルプモーダル -->
@@ -134,6 +137,12 @@
         <p class="note">※ ASCII 32–126 のみシフト対象／それ以外（日本語など）は無変換で通過</p>
         <p id="output-status" class="note" role="status"></p>
         <p id="output-stats" class="note"></p>
+        <p id="run-notice" class="note"></p>
+        <section class="run-panel" aria-labelledby="run-title">
+          <h2 id="run-title">実行結果</h2>
+          <pre id="run-result" role="log" aria-live="polite"></pre>
+          <div id="run-host"></div>
+        </section>
       </section>
 
       <section class="io">
@@ -180,7 +189,7 @@
 
     <!-- タブ2: ビジュネル暗号（未実装） -->
     <section id="tab-vigenere" class="tab-content">
-      <p style="padding:20px;color:var(--muted);">ビジュネル暗号版は現在未実装です。</p>
+      <p class="placeholder-note">ビジュネル暗号版は現在未実装です。</p>
     </section>
   </main>
 
@@ -191,6 +200,7 @@
   </footer>
 
   <script src="js/obfuscator-core.js"></script>
+  <script src="js/sandbox-runner.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
