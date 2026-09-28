@@ -1,0 +1,718 @@
+{
+  "limits": {
+    "inspectedUtf16Units": 2000000,
+    "sourceUtf16Units": 100000,
+    "traceRows": 200,
+    "frequencyRows": 20
+  },
+  "metrics": {
+    "sample3": {
+      "ok": true,
+      "shift": 3,
+      "source": {
+        "codePoints": 175,
+        "utf16Units": 175,
+        "utf8Bytes": 225,
+        "shifted": 146,
+        "passthrough": 29,
+        "loneSurrogates": 0
+      },
+      "payload": {
+        "codePoints": 175,
+        "utf16Units": 175,
+        "utf8Bytes": 225
+      },
+      "literalBody": {
+        "codePoints": 179,
+        "utf16Units": 179,
+        "utf8Bytes": 229
+      },
+      "escapeExpansion": {
+        "codePoints": 4,
+        "utf16Units": 4,
+        "utf8Bytes": 4
+      },
+      "decoder": {
+        "codePoints": 199,
+        "utf16Units": 199,
+        "utf8Bytes": 199
+      },
+      "fixedSyntax": 111,
+      "keyDigits": 1,
+      "wrapper": {
+        "codePoints": 311,
+        "utf16Units": 311,
+        "utf8Bytes": 311
+      },
+      "snippet": {
+        "codePoints": 490,
+        "utf16Units": 490,
+        "utf8Bytes": 540
+      },
+      "ratios": {
+        "codePoints": 280,
+        "utf8Bytes": 240
+      }
+    },
+    "empty0": {
+      "ok": true,
+      "shift": 0,
+      "source": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0,
+        "shifted": 0,
+        "passthrough": 0,
+        "loneSurrogates": 0
+      },
+      "payload": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "literalBody": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "escapeExpansion": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "decoder": {
+        "codePoints": 199,
+        "utf16Units": 199,
+        "utf8Bytes": 199
+      },
+      "fixedSyntax": 111,
+      "keyDigits": 1,
+      "wrapper": {
+        "codePoints": 311,
+        "utf16Units": 311,
+        "utf8Bytes": 311
+      },
+      "snippet": {
+        "codePoints": 311,
+        "utf16Units": 311,
+        "utf8Bytes": 311
+      },
+      "ratios": {
+        "codePoints": null,
+        "utf8Bytes": null
+      }
+    },
+    "empty94": {
+      "ok": true,
+      "shift": 94,
+      "source": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0,
+        "shifted": 0,
+        "passthrough": 0,
+        "loneSurrogates": 0
+      },
+      "payload": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "literalBody": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "escapeExpansion": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "decoder": {
+        "codePoints": 199,
+        "utf16Units": 199,
+        "utf8Bytes": 199
+      },
+      "fixedSyntax": 111,
+      "keyDigits": 2,
+      "wrapper": {
+        "codePoints": 312,
+        "utf16Units": 312,
+        "utf8Bytes": 312
+      },
+      "snippet": {
+        "codePoints": 312,
+        "utf16Units": 312,
+        "utf8Bytes": 312
+      },
+      "ratios": {
+        "codePoints": null,
+        "utf8Bytes": null
+      }
+    },
+    "emoji": {
+      "ok": true,
+      "shift": 3,
+      "source": {
+        "codePoints": 2,
+        "utf16Units": 3,
+        "utf8Bytes": 5,
+        "shifted": 1,
+        "passthrough": 1,
+        "loneSurrogates": 0
+      },
+      "payload": {
+        "codePoints": 2,
+        "utf16Units": 3,
+        "utf8Bytes": 5
+      },
+      "literalBody": {
+        "codePoints": 2,
+        "utf16Units": 3,
+        "utf8Bytes": 5
+      },
+      "escapeExpansion": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "decoder": {
+        "codePoints": 199,
+        "utf16Units": 199,
+        "utf8Bytes": 199
+      },
+      "fixedSyntax": 111,
+      "keyDigits": 1,
+      "wrapper": {
+        "codePoints": 311,
+        "utf16Units": 311,
+        "utf8Bytes": 311
+      },
+      "snippet": {
+        "codePoints": 313,
+        "utf16Units": 314,
+        "utf8Bytes": 316
+      },
+      "ratios": {
+        "codePoints": 15650,
+        "utf8Bytes": 6320
+      }
+    },
+    "lineSeparator": {
+      "ok": true,
+      "shift": 3,
+      "source": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3,
+        "shifted": 0,
+        "passthrough": 1,
+        "loneSurrogates": 0
+      },
+      "payload": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3
+      },
+      "literalBody": {
+        "codePoints": 6,
+        "utf16Units": 6,
+        "utf8Bytes": 6
+      },
+      "escapeExpansion": {
+        "codePoints": 5,
+        "utf16Units": 5,
+        "utf8Bytes": 3
+      },
+      "decoder": {
+        "codePoints": 199,
+        "utf16Units": 199,
+        "utf8Bytes": 199
+      },
+      "fixedSyntax": 111,
+      "keyDigits": 1,
+      "wrapper": {
+        "codePoints": 311,
+        "utf16Units": 311,
+        "utf8Bytes": 311
+      },
+      "snippet": {
+        "codePoints": 317,
+        "utf16Units": 317,
+        "utf8Bytes": 317
+      },
+      "ratios": {
+        "codePoints": 31700,
+        "utf8Bytes": 10566.7
+      }
+    },
+    "loneHighSurrogate": {
+      "ok": true,
+      "shift": 3,
+      "source": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3,
+        "shifted": 0,
+        "passthrough": 1,
+        "loneSurrogates": 1
+      },
+      "payload": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3
+      },
+      "literalBody": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3
+      },
+      "escapeExpansion": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "decoder": {
+        "codePoints": 199,
+        "utf16Units": 199,
+        "utf8Bytes": 199
+      },
+      "fixedSyntax": 111,
+      "keyDigits": 1,
+      "wrapper": {
+        "codePoints": 311,
+        "utf16Units": 311,
+        "utf8Bytes": 311
+      },
+      "snippet": {
+        "codePoints": 312,
+        "utf16Units": 312,
+        "utf8Bytes": 314
+      },
+      "ratios": {
+        "codePoints": 31200,
+        "utf8Bytes": 10466.7
+      }
+    },
+    "loneLowSurrogate": {
+      "ok": true,
+      "shift": 3,
+      "source": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3,
+        "shifted": 0,
+        "passthrough": 1,
+        "loneSurrogates": 1
+      },
+      "payload": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3
+      },
+      "literalBody": {
+        "codePoints": 1,
+        "utf16Units": 1,
+        "utf8Bytes": 3
+      },
+      "escapeExpansion": {
+        "codePoints": 0,
+        "utf16Units": 0,
+        "utf8Bytes": 0
+      },
+      "decoder": {
+        "codePoints": 199,
+        "utf16Units": 199,
+        "utf8Bytes": 199
+      },
+      "fixedSyntax": 111,
+      "keyDigits": 1,
+      "wrapper": {
+        "codePoints": 311,
+        "utf16Units": 311,
+        "utf8Bytes": 311
+      },
+      "snippet": {
+        "codePoints": 312,
+        "utf16Units": 312,
+        "utf8Bytes": 314
+      },
+      "ratios": {
+        "codePoints": 31200,
+        "utf8Bytes": 10466.7
+      }
+    }
+  },
+  "frequency": {
+    "sample3": {
+      "ok": true,
+      "totalCount": 175,
+      "uniqueCount": 57,
+      "shownUnique": 20,
+      "otherCount": 48,
+      "passthroughCount": 29,
+      "passthroughRate": 0.1657142857142857,
+      "entropy": {
+        "source": 5.25966337186305,
+        "payload": 5.25966337186305,
+        "invariant": true
+      },
+      "rows": [
+        {
+          "sourceCP": 101,
+          "payloadCP": 104,
+          "count": 12,
+          "share": 0.06857142857142857
+        },
+        {
+          "sourceCP": 111,
+          "payloadCP": 114,
+          "count": 12,
+          "share": 0.06857142857142857
+        },
+        {
+          "sourceCP": 32,
+          "payloadCP": 35,
+          "count": 11,
+          "share": 0.06285714285714286
+        },
+        {
+          "sourceCP": 116,
+          "payloadCP": 119,
+          "count": 11,
+          "share": 0.06285714285714286
+        },
+        {
+          "sourceCP": 110,
+          "payloadCP": 113,
+          "count": 10,
+          "share": 0.05714285714285714
+        },
+        {
+          "sourceCP": 34,
+          "payloadCP": 37,
+          "count": 8,
+          "share": 0.045714285714285714
+        },
+        {
+          "sourceCP": 108,
+          "payloadCP": 111,
+          "count": 8,
+          "share": 0.045714285714285714
+        },
+        {
+          "sourceCP": 99,
+          "payloadCP": 102,
+          "count": 7,
+          "share": 0.04
+        },
+        {
+          "sourceCP": 112,
+          "payloadCP": 115,
+          "count": 6,
+          "share": 0.03428571428571429
+        },
+        {
+          "sourceCP": 46,
+          "payloadCP": 49,
+          "count": 5,
+          "share": 0.02857142857142857
+        },
+        {
+          "sourceCP": 100,
+          "payloadCP": 103,
+          "count": 5,
+          "share": 0.02857142857142857
+        },
+        {
+          "sourceCP": 10,
+          "payloadCP": 10,
+          "count": 4,
+          "share": 0.022857142857142857
+        },
+        {
+          "sourceCP": 59,
+          "payloadCP": 62,
+          "count": 4,
+          "share": 0.022857142857142857
+        },
+        {
+          "sourceCP": 97,
+          "payloadCP": 100,
+          "count": 4,
+          "share": 0.022857142857142857
+        },
+        {
+          "sourceCP": 115,
+          "payloadCP": 118,
+          "count": 4,
+          "share": 0.022857142857142857
+        },
+        {
+          "sourceCP": 117,
+          "payloadCP": 120,
+          "count": 4,
+          "share": 0.022857142857142857
+        },
+        {
+          "sourceCP": 40,
+          "payloadCP": 43,
+          "count": 3,
+          "share": 0.017142857142857144
+        },
+        {
+          "sourceCP": 41,
+          "payloadCP": 44,
+          "count": 3,
+          "share": 0.017142857142857144
+        },
+        {
+          "sourceCP": 98,
+          "payloadCP": 101,
+          "count": 3,
+          "share": 0.017142857142857144
+        },
+        {
+          "sourceCP": 105,
+          "payloadCP": 108,
+          "count": 3,
+          "share": 0.017142857142857144
+        }
+      ]
+    },
+    "empty0": {
+      "ok": true,
+      "totalCount": 0,
+      "uniqueCount": 0,
+      "shownUnique": 0,
+      "otherCount": 0,
+      "passthroughCount": 0,
+      "passthroughRate": null,
+      "entropy": {
+        "source": 0,
+        "payload": 0,
+        "invariant": true
+      },
+      "rows": []
+    },
+    "ties3": {
+      "ok": true,
+      "totalCount": 5,
+      "uniqueCount": 4,
+      "shownUnique": 4,
+      "otherCount": 0,
+      "passthroughCount": 1,
+      "passthroughRate": 0.2,
+      "entropy": {
+        "source": 1.9219280948873623,
+        "payload": 1.9219280948873623,
+        "invariant": true
+      },
+      "rows": [
+        {
+          "sourceCP": 65,
+          "payloadCP": 68,
+          "count": 2,
+          "share": 0.4
+        },
+        {
+          "sourceCP": 66,
+          "payloadCP": 69,
+          "count": 1,
+          "share": 0.2
+        },
+        {
+          "sourceCP": 67,
+          "payloadCP": 70,
+          "count": 1,
+          "share": 0.2
+        },
+        {
+          "sourceCP": 128512,
+          "payloadCP": 128512,
+          "count": 1,
+          "share": 0.2
+        }
+      ]
+    },
+    "twentyOneTypes0": {
+      "ok": true,
+      "totalCount": 21,
+      "uniqueCount": 21,
+      "shownUnique": 20,
+      "otherCount": 1,
+      "passthroughCount": 0,
+      "passthroughRate": 0,
+      "entropy": {
+        "source": 4.39231742277876,
+        "payload": 4.39231742277876,
+        "invariant": true
+      },
+      "rows": [
+        {
+          "sourceCP": 65,
+          "payloadCP": 65,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 66,
+          "payloadCP": 66,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 67,
+          "payloadCP": 67,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 68,
+          "payloadCP": 68,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 69,
+          "payloadCP": 69,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 70,
+          "payloadCP": 70,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 71,
+          "payloadCP": 71,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 72,
+          "payloadCP": 72,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 73,
+          "payloadCP": 73,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 74,
+          "payloadCP": 74,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 75,
+          "payloadCP": 75,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 76,
+          "payloadCP": 76,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 77,
+          "payloadCP": 77,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 78,
+          "payloadCP": 78,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 79,
+          "payloadCP": 79,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 80,
+          "payloadCP": 80,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 81,
+          "payloadCP": 81,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 82,
+          "payloadCP": 82,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 83,
+          "payloadCP": 83,
+          "count": 1,
+          "share": 0.047619047619047616
+        },
+        {
+          "sourceCP": 84,
+          "payloadCP": 84,
+          "count": 1,
+          "share": 0.047619047619047616
+        }
+      ]
+    }
+  },
+  "comparison": {
+    "exact": {
+      "ok": true,
+      "equal": true,
+      "firstMismatch": null
+    },
+    "sourceEof": {
+      "ok": true,
+      "equal": false,
+      "firstMismatch": {
+        "codePointIndex": 1,
+        "sourceEof": true,
+        "restoredEof": false
+      }
+    },
+    "restoredEof": {
+      "ok": true,
+      "equal": false,
+      "firstMismatch": {
+        "codePointIndex": 1,
+        "sourceEof": false,
+        "restoredEof": true
+      }
+    },
+    "astralPrefix": {
+      "ok": true,
+      "equal": false,
+      "firstMismatch": {
+        "codePointIndex": 1,
+        "sourceEof": false,
+        "restoredEof": false
+      }
+    },
+    "noNfc": {
+      "ok": true,
+      "equal": false,
+      "firstMismatch": {
+        "codePointIndex": 0,
+        "sourceEof": false,
+        "restoredEof": false
+      }
+    }
+  }
+}

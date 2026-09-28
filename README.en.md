@@ -26,17 +26,25 @@ In-page execution takes place in a sandbox iframe isolated from the parent page.
 
 ## 📸 Screenshots
 
-> ![English comparison mode in the light theme](assets/en/screenshot.png)
+> ![English normal view in the light theme](assets/en/screenshot.png)
 >
-> *The English comparison view with the sample input and generated output in the light theme*
+> *The English normal view with the basic sample and generated output in the light theme*
 
-> ![Japanese comparison mode in the light theme](assets/screenshot.png)
+> ![English learning lab in the light theme](assets/en/screenshot2.png)
 >
-> *The equivalent Japanese comparison view in the light theme*
+> *The English learning lab with transformation steps and the size breakdown expanded in the light theme*
 
-> ![Japanese comparison mode in the dark theme](assets/screenshot2.png)
+> ![Japanese normal view in the light theme](assets/screenshot.png)
 >
-> *The same sample and comparison view in the dark theme; this image shows the Japanese interface*
+> *The Japanese normal view with the basic sample and generated output in the light theme*
+
+> ![Japanese learning lab in the dark theme](assets/screenshot2.png)
+>
+> *The Japanese learning lab with transformation steps and the size breakdown expanded in the dark theme*
+
+> ![Japanese non-executing inspection in the light theme](assets/screenshot3.png)
+>
+> *The Japanese inspector after loading and recovering the current snippet, with a match against the source captured at load time*
 
 ---
 
@@ -66,6 +74,10 @@ In-page execution takes place in a sandbox iframe isolated from the parent page.
 - **Responsive layout**: Support mobile and desktop displays
 - **Input validation**: Reject empty keys, decimals, exponent notation, full-width digits, negative numbers and values of 95 or greater
 - **Output freshness**: Clear output and request regeneration when input, key, view mode or language changes
+- **Transformation steps**: Compare original characters, shifted characters and escaped text by code point
+- **Non-executing inspection**: Recover a fixed-format snippet and compare it with the source captured by explicitly loading the output
+- **Sizes and character frequencies**: Show three length units, wrapper overhead, frequencies and entropy
+- **Six samples and one-step restore**: Explicitly load a sample, clear input, reset defaults or restore the previous input state
 
 Whitespace surrounding the key is trimmed, and leading zeroes are accepted. An empty key is distinct from shift 0.
 
@@ -148,6 +160,135 @@ When embedding output in an HTML `<script>` element, input-derived `<` character
 
 Generated snippets cannot run under a CSP that prohibits `eval`. Inline scripts have additional restrictions. Do not weaken an existing site's CSP to paste a snippet into it; use this tool's isolated execution view for learning. Loading output as a `.js` file does not bypass restrictions on dynamic evaluation.
 
+### Using the learning lab
+
+The learning lab calculates transformation steps, sizes and character frequencies from the source and key used for generation.
+The normal and comparison views produce the same learning results.
+
+1. Load a sample, check the key and generate the obfuscated code.
+2. Expand “Transformation steps” to follow each original character through to the string literal.
+3. Expand “Size breakdown” and “Character frequencies” to compare the added content and unchanged properties.
+4. In “Decode without execution”, press “Load current generated snippet”.
+5. Press “Recover without executing” and review the format match, recovered content and comparison with the source captured at load time.
+
+Changing the input, key, view or language, or loading, clearing, resetting or restoring input, clears the output and learning results.
+Regeneration is required even if an action such as loading a sample leaves the input unchanged.
+Learning calculations accept source input of up to 100,000 UTF-16 code units.
+Above that limit, only the learning results are cleared and a limit message is shown; the existing generation process continues.
+Generation, learning and non-executing recovery also work over `file://`, but the existing code-execution action is disabled.
+
+#### Inspecting the transformation steps
+
+Each row shows the original code point, whether it is in the ASCII shift range, the shifted character and the escaped literal body.
+Only the first 200 code points are displayed, alongside the full count.
+Whitespace, control characters, combining characters, bidirectional controls and lone surrogates use identifying labels and `U+` notation.
+These display labels are never written back to the source or generated snippet.
+
+Code points are not the same as visually perceived characters.
+The emoji 😀 is one code point, but combining sequences and multi-code-point emoji are counted separately.
+
+#### Inspecting restoration without execution
+
+The inspection input is a paste field independent of the main editor.
+It accepts only this tool's fixed seven-line output format; it is not a general JavaScript deobfuscator.
+The embedded decoder, key notation, quotes, whitespace, line endings and generator-emitted escapes are checked, followed by a full comparison with regenerated output.
+The generation key accepts `003`, but writes `3` into the snippet, and inspection accepts only that canonical notation.
+Appended code, a changed decoder, HTML or Markdown wrappers and truncated snippets are rejected.
+
+Inspection uses string processing only; it never passes the input to `eval`, `Function`, a script element or an execution iframe.
+Recovered content is displayed as text in a read-only field and is never written back into the main editor.
+A format match does not establish JavaScript syntax validity or safety.
+A match against the source captured at load time establishes only equality with that string, not safety.
+
+“Load current generated snippet” captures a still-current snippet and the source used to generate it in memory.
+Loading does not recover anything automatically; it clears the preceding result and returns to an uninspected state.
+Later changes to the main input or key do not change the comparison source: it remains the source captured at load time, not the current editor contents.
+Manually editing the paste field clears both the comparison source and result, even if the entered string is unchanged.
+Manually pasted snippets can be recovered, but have no captured source for comparison.
+A failed inspection removes the preceding recovered result; “Clear inspection” also removes the pasted input and comparison source.
+Changing the language preserves the pasted input, result and comparison source, translating only the explanation.
+
+Comparison uses exact JavaScript string equality, without trimming, Unicode normalization or newline conversion.
+Mismatches are reported at a one-based code-point position, including which side has reached the end of its string.
+Inspection input is limited to 2,000,000 UTF-16 code units.
+An empty paste field is an inspection error, whereas a canonical snippet generated from empty source is successfully recovered.
+
+The pure parser permits uniformly LF or uniformly CRLF wrapper lines, with either no terminal newline or exactly one.
+It rejects mixed newlines, bare CR, a BOM and extra whitespace.
+However, browser textareas normalize CRLF and CR to LF, so inspection cannot identify the newline format that existed before pasting.
+Newlines within the recovered source are preserved separately from this wrapper normalization.
+Lone surrogates can be retained in memory as JavaScript strings, but UTF-8 saving replaces them with U+FFFD.
+An in-memory recovery match therefore does not guarantee equality after saving a file.
+
+#### Comparing sizes and character frequencies
+
+Sizes distinguish code points, JavaScript UTF-16 code units and UTF-8 bytes measured with `TextEncoder`.
+For example, `A😀` has 2 code points, 3 UTF-16 code units and 5 UTF-8 bytes.
+The escaped literal body excludes its surrounding quotes.
+Quotes, the decoder and other framing syntax belong to the wrapper, so no component is counted twice.
+The following values use the Japanese reference sample above with key 3.
+
+<!-- learning-sizes:start -->
+| Component | Code points | UTF-16 code units | UTF-8 bytes |
+|---|---:|---:|---:|
+| Source | 175 | 175 | 225 |
+| Shifted payload | 175 | 175 | 225 |
+| Escaped literal body | 179 | 179 | 229 |
+| Escape expansion | 4 | 4 | 4 |
+| Decoder | 199 | 199 | 199 |
+| Fixed syntax | 111 | 111 | 111 |
+| Key digits | 1 | 1 | 1 |
+| Total wrapper | 311 | 311 | 311 |
+| Complete snippet | 490 | 490 | 540 |
+<!-- learning-sizes:end -->
+
+For each of the three units, source + escape expansion + wrapper = snippet.
+The wrapper is decoder 199 + fixed syntax 111 + key digits.
+An empty-source snippet has length 311 with a one-digit key and 312 with key 94; it is not always 311.
+Ratios are snippet length divided by source length, expressed as percentages, not compression or cryptographic strength.
+With empty source, the ratio cannot be defined, so the learning lab shows “—” and an explanation.
+The existing output statistics continue to show “undefined”.
+
+Frequency analysis counts every code point in the source and sorts by descending frequency, then ascending numeric code point for ties.
+Only the top 20 distinct code points are displayed; the remaining occurrences are grouped as “other”.
+Each row maps an original character to its shifted character and shows its count and share of the total.
+These values also use the same Japanese sample and key 3.
+
+<!-- learning-stats:start -->
+| Metric | Value |
+|---|---:|
+| Code-point ratio (%) | 280.0 |
+| UTF-8 byte ratio (%) | 240.0 |
+| Total code points | 175 |
+| Distinct code points | 57 |
+| Displayed distinct code points | 20 |
+| Occurrences of displayed code points | 127 |
+| Other occurrences | 48 |
+| Unshifted code points | 29 |
+| Source entropy (bits/code point) | 5.2597 |
+| Shifted payload entropy (bits/code point) | 5.2597 |
+<!-- learning-stats:end -->
+
+The ASCII shift is a one-to-one substitution and preserves out-of-range characters, so the frequency-count distribution and entropy do not change.
+Entropy compares the source with the directly shifted payload, not the wrapper-containing snippet.
+Neither a high value nor invariance establishes safety.
+Empty input has entropy 0; its unshifted share is “—” because there is no denominator.
+
+#### Samples and one-step input restore
+
+The six samples are basic (`basic`), ASCII wraparound (`ascii-wrap`), Unicode (`unicode`), escapes (`escapes`), console logs (`console`) and scope (`scope`).
+Changing the selection alone does not replace the main input; pressing the load button applies it.
+Loading a sample preserves the current key; each sample's recommended key is guidance only.
+Clear empties only the source and retains the key, while reset loads the basic sample in the current language and restores key 3.
+
+Immediately before load, clear or reset changes the state, the source, key and sample provenance are captured for one-step restore.
+Restore consumes that single saved state; it is not an editing history or redo feature.
+An action that leaves the state unchanged does not overwrite the saved state.
+Manual source and key changes do not create a new restore point.
+An untouched sample is translated when the language changes, but manually edited source is never automatically translated, even if it equals a sample.
+Restoring an untouched sample from a different language preserves its source and key and makes it custom input, rather than retranslating it as a current-language sample.
+These states and the restore point exist only in memory, never in localStorage.
+
 ---
 
 ## ⚠️ Cautions
@@ -188,7 +329,7 @@ The following document explains the underlying techniques and their security imp
 
 ### Reference sample statistics and entropy
 
-Character counts use Unicode code points, so one emoji counts as one character. These values are for the Japanese reference sample shown above with a shift of 3.
+Character counts use Unicode code points. A single-code-point emoji such as 😀 counts as one, but a visually perceived character can contain multiple code points. These values are for the Japanese reference sample shown above with a shift of 3.
 
 <!-- stats:start -->
 | Metric | Value |
@@ -202,7 +343,7 @@ Character counts use Unicode code points, so one emoji counts as one character. 
 | Transformed payload entropy (bits/character) | 5.2597 |
 <!-- stats:end -->
 
-The character-count ratio is the generated length divided by the original length, expressed as a percentage. It is not a measure of compression. Empty input produces 311 characters, with the ratio shown as “undefined” in the interface. A Caesar transformation preserves character frequencies, so an entropy increase cannot serve as evidence of protection or as a dependable detector for this transformation.
+The character-count ratio is the generated length divided by the original length, expressed as a percentage. It is not a measure of compression. With this example's key 3, empty input produces 311 characters, with the ratio shown as “undefined” in the interface. A Caesar transformation preserves character frequencies, so an entropy increase cannot serve as evidence of protection or as a dependable detector for this transformation.
 
 ---
 
@@ -246,6 +387,9 @@ npm test
 
 `node --test` checks known answers, round trips for all 95 shifts, string escaping, key validation, statistics, sandbox messages, HTML, contrast and documentation. README examples, numeric tables and Japanese/English heading correspondence are also tested. GitHub Actions runs the same tests on pushes and pull requests. Actual layout and browser-specific behavior require separate browser checks.
 
+Learning tests also cover accepted and rejected fixed formats, non-executing recovery, size decomposition, frequencies, limits, the six samples, one-step input restore, learning-result invalidation and the independent inspector.
+The new numeric tables are checked against both the fixed values in `test/fixtures/learning-expect.json` and recalculated `LearningCore` results.
+
 ## 📁 Directory structure
 
 Each line is a path relative to the project root.
@@ -265,13 +409,19 @@ README.en.md                         # Complete English version
 SECURITY.md                          # Limits of obfuscation and defensive detection
 assets/                              # Application screenshots
 assets/en/                           # English-language screenshots
-assets/en/screenshot.png             # English comparison mode in the light theme
-assets/screenshot.png                # Japanese comparison mode in the light theme
-assets/screenshot2.png               # Japanese comparison mode in the dark theme
+assets/en/screenshot.png             # English normal view in the light theme
+assets/en/screenshot2.png            # English learning lab in the light theme
+assets/screenshot.png                # Japanese normal view in the light theme
+assets/screenshot2.png               # Japanese learning lab in the dark theme
+assets/screenshot3.png               # Japanese non-executing recovery in the light theme
 index.html                           # Interface structure and parent CSP
 js/                                  # Shared modules
+js/editor-state.js                   # Input provenance and one-step restore
 js/i18n.js                           # Japanese/English messages and language preferences
+js/learning-core.js                  # Non-executing inspection, traces, sizes and frequencies
+js/learning-ui.js                    # Learning views, invalidation and the independent inspector
 js/obfuscator-core.js                # DOM-independent transformation, validation and statistics
+js/samples.js                        # Six bilingual samples with stable IDs
 js/sandbox-runner.js                 # Frame lifecycle and message validation
 package.json                         # Dependency-free test commands
 sandbox/                             # Isolated execution document and scripts
@@ -283,12 +433,16 @@ style.css                            # Styles for languages, themes and viewport
 test/                                # Node.js built-in tests
 test/contrast.test.js                # Light/dark color contrast
 test/core.test.js                    # Known answers, round trips, keys and statistics
+test/editor-state.test.js            # Sample, language and restore state transitions
 test/fixtures/                       # Fixed reference data
 test/fixtures/expect.json            # Reference outputs and known answers
+test/fixtures/learning-expect.json   # Fixed reference values for learning helpers
 test/format.test.js                  # UTF-8, line lengths and readable formatting
 test/html.test.js                    # CSP, HTML, ARIA and local assets
 test/i18n.test.js                    # Language dictionaries and display parity
+test/learning-core.test.js           # Non-executing inspection and pure learning helpers
 test/readme.test.js                  # Examples, statistics, metadata and document structure
+test/samples.test.js                 # Fixed sample data, syntax and benign behavior
 test/sandbox.test.js                 # Isolation and message validation
 test/security.test.js                # Detection patterns, statistics and entropy consistency
 test/snippet.test.js                 # Execution, escaping and scope
@@ -300,7 +454,7 @@ test/ui.test.js                      # Clipboard waits and interface state chang
 
 The tool targets current Chrome, Edge, Firefox and Safari with JavaScript enabled. It uses no build system, CDN or external API. Clipboard and download permissions may depend on the browser and its settings.
 
-| How the page is opened | Generate, copy and save | In-page execution |
+| How the page is opened | Generate, learn, recover without execution, copy and save | In-page execution |
 |---|---|---|
 | HTTP/HTTPS | Available | Available in a sandbox iframe |
 | `file://` | Available | Disabled; an HTTP-opening instruction is displayed |
@@ -315,7 +469,7 @@ If Python 3 is available, run the following command from the repository root:
 python -m http.server 8000 --bind 127.0.0.1
 ```
 
-Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in the browser. Press Ctrl+C in the terminal to stop the server. Opening `index.html` directly is also supported if you only need generation.
+Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in the browser. Press Ctrl+C in the terminal to stop the server. Opening `index.html` directly also supports generation, learning and non-executing recovery.
 
 ---
 

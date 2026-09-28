@@ -23,8 +23,40 @@ function showToast(message, isError = false) {
 let runner = null;
 let outputSource = null;
 let outputShift = null;
+let editorState = null;
+let learningUI = null;
+
+function renderSampleChoice() {
+  const sample = Samples.get($("sample-select").value, ObfuscatorI18n.language);
+  $("sample-description").textContent = sample.description;
+  $("sample-key-note").textContent = t("sampleKeyNote", { shift: sample.recommendedShift });
+  $("sample-expected").textContent = t("sampleExpected", { text: sample.expected.observation });
+}
+
+function renderEditor() {
+  $("inputCode").value = editorState.source;
+  $("inputCodeCompare").value = editorState.source;
+  $("key").value = editorState.key;
+  $("btn-restore-input").disabled = !editorState.undo;
+  $("sample-state").textContent = editorState.pristine ?
+    t("sampleLoaded", { name: Samples.get(editorState.sampleId, ObfuscatorI18n.language).name }) : t("sampleCustom");
+}
+
+function renderSampleOptions() {
+  const selected = $("sample-select").value || "basic";
+  const options = Samples.samples.map((sample) => {
+    const option = document.createElement("option");
+    option.value = sample.id;
+    option.textContent = Samples.get(sample.id, ObfuscatorI18n.language).name;
+    return option;
+  });
+  $("sample-select").replaceChildren(...options);
+  $("sample-select").value = selected;
+  renderSampleChoice();
+}
 
 function invalidateOutput() {
+  if (learningUI) learningUI.clear();
   if (runner) runner.reset();
   $("run-result").textContent = "";
   outputSource = null;
@@ -60,8 +92,14 @@ function init() {
     $("run-notice").textContent = t(SandboxRunner.supported ? "runNotice" : "fileNotice");
   }
   renderRunNotice();
-  $("inputCode").value = t("sample");
-  $("inputCodeCompare").value = $("inputCode").value;
+  learningUI = LearningUI.create({
+    document,
+    t,
+    getCurrentOutput: () => hasFreshOutput() ? { snippet: $("outputCode").value, source: outputSource } : null,
+  });
+  editorState = EditorState.create(ObfuscatorI18n.language);
+  renderEditor();
+  renderSampleOptions();
   function validateKey() {
     const result = ObfuscatorCore.parseShift($("key").value);
     const message = result.ok ? "" : result.reason === "empty" ?
@@ -75,19 +113,34 @@ function init() {
   invalidateOutput();
   $("output-status").textContent = t("initial");
   validateKey();
+  $("sample-select").addEventListener("change", renderSampleChoice);
+  const editorActions = {
+    "btn-load-sample": () => EditorState.load(editorState, $("sample-select").value, ObfuscatorI18n.language),
+    "btn-clear-input": () => EditorState.clear(editorState),
+    "btn-reset-input": () => EditorState.reset(editorState, ObfuscatorI18n.language),
+    "btn-restore-input": () => EditorState.restore(editorState, ObfuscatorI18n.language),
+  };
+  for (const [id, action] of Object.entries(editorActions)) {
+    $(id).addEventListener("click", () => {
+      editorState = action();
+      renderEditor();
+      invalidateOutput();
+      validateKey();
+    });
+  }
   window.addEventListener("languagechange", () => {
-    const source = $("inputCode").value;
-    if (Object.values(ObfuscatorI18n.messages).some(messages => source === messages.sample)) {
-      $("inputCode").value = t("sample");
-      $("inputCodeCompare").value = $("inputCode").value;
-    }
+    editorState = EditorState.changeLanguage(editorState, ObfuscatorI18n.language);
+    renderEditor();
+    renderSampleOptions();
     invalidateOutput();
+    learningUI.refreshLanguage();
     validateKey();
     renderRunNotice();
     $("toast").textContent = "";
     $("toast").classList.remove("show");
   });
   $("key").addEventListener("input", () => {
+    editorState = EditorState.editKey(editorState, $("key").value);
     invalidateOutput();
     validateKey();
   });
@@ -102,6 +155,7 @@ function init() {
     $("outputCodeCompare").value = snippet;
     outputSource = source;
     outputShift = result.value;
+    learningUI.generate(source, result.value);
     const count = ObfuscatorCore.stats(source, snippet);
     $("output-stats").textContent =
       t("stats", { ...count, ratio: count.ratio === null ? t("ratioUndefined") : count.ratio + "%" });
@@ -253,12 +307,14 @@ function initViewMode() {
 
   // 通常モードと比較モードの入力を同期
   inputCode.addEventListener("input", () => {
-    inputCodeCompare.value = inputCode.value;
+    editorState = EditorState.editSource(editorState, inputCode.value);
+    renderEditor();
     invalidateOutput();
   });
 
   inputCodeCompare.addEventListener("input", () => {
-    inputCode.value = inputCodeCompare.value;
+    editorState = EditorState.editSource(editorState, inputCodeCompare.value);
+    renderEditor();
     invalidateOutput();
   });
 
