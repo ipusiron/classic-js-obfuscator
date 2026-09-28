@@ -137,6 +137,30 @@
           <button id="btn-restore-input" type="button" disabled>直前の入力に戻す</button>
         </div>
         <p id="sample-state" class="note" role="status" aria-live="polite"></p>
+        <details id="share-panel" class="lab-details">
+          <summary id="share-title">コードを含めない設定共有</summary>
+          <div class="lab-content">
+            <p id="share-note" class="note">選択欄の教材・鍵・言語・表示モードを共有します。編集したコードは含まれません。</p>
+            <div class="inspect-actions">
+              <button id="btn-share-create" type="button">共有URLを作る</button>
+              <button id="btn-share-copy" type="button" disabled>共有URLをコピー</button>
+            </div>
+            <label id="share-url-label" for="share-url">設定共有URL</label>
+            <textarea id="share-url" rows="3" readonly spellcheck="false"></textarea>
+            <p id="share-status" class="note" role="status" aria-live="polite"></p>
+            <p id="share-error" class="inspect-error" role="status"></p>
+            <section id="share-pending" aria-labelledby="share-pending-title" hidden>
+              <h3 id="share-pending-title">受信した設定・未適用</h3>
+              <p id="share-preview" class="note"></p>
+              <p id="share-apply-note" class="note">適用すると現在の主入力を教材で置き換えます。生成・実行はしません。</p>
+              <div class="inspect-actions">
+                <button id="btn-share-apply" type="button">設定を適用</button>
+                <button id="btn-share-dismiss" type="button">見送る</button>
+              </div>
+            </section>
+            <p id="share-restore-note" class="note">入力は一段階戻せます。表示言語と表示モードは戻しません。</p>
+          </div>
+        </details>
       </section>
       <section class="controls">
         <div class="field-inline-label">
@@ -257,7 +281,65 @@
           <pre id="inspect-source" class="inspect-source" role="textbox" aria-readonly="true" aria-multiline="true" aria-labelledby="inspect-source-label" tabindex="0"></pre>
           <p id="inspect-lone-warning" class="lab-warning" hidden></p>
           <p id="inspect-safety-note" class="note">復元できても、実行してよいという意味ではありません。ここではコードを実行しません。</p>
+          <section id="reference-panel" class="reference-panel" aria-labelledby="reference-title">
+            <h4 id="reference-title">任意の比較用コードとの比較</h4>
+            <p id="reference-note" class="note">上の読込時比較とは別です。比較用コードは主入力へ自動追従しません。</p>
+            <label id="reference-label" for="reference-input">比較用コード</label>
+            <textarea id="reference-input" rows="4" spellcheck="false" aria-describedby="reference-origin reference-newline-note"></textarea>
+            <p id="reference-origin" class="note"></p>
+            <p id="reference-newline-note" class="note">取込時の文字列を保持します。欄を編集すると、表示欄の値を新しい比較元にします。</p>
+            <div class="inspect-actions">
+              <button id="btn-reference-load" type="button">現在の主入力を取り込む</button>
+              <button id="btn-reference-compare" type="button" disabled>比較用コードと比較</button>
+              <button id="btn-reference-clear" type="button">比較元をクリア</button>
+            </div>
+            <p id="reference-status" class="lab-status" role="status" aria-live="polite"></p>
+            <p id="context-note" class="note">最初の不一致の前後16コードポイントを表示します。位置は1始まりです。</p>
+            <div id="context-panels" class="context-panels" hidden>
+              <section aria-labelledby="context-source-title">
+                <h5 id="context-source-title">比較用コードの前後</h5>
+                <div id="context-source"></div>
+              </section>
+              <section aria-labelledby="context-restored-title">
+                <h5 id="context-restored-title">復元したコードの前後</h5>
+                <div id="context-restored"></div>
+              </section>
+            </div>
+          </section>
         </section>
+        <details id="quiz-panel" class="lab-details">
+          <summary id="quiz-title">学習クイズ</summary>
+          <div class="lab-content">
+            <p id="quiz-intro" class="note">固定12問で変換と安全性の違いを確認します。コードは実行しません。</p>
+            <p id="quiz-position" class="note"></p>
+            <p id="quiz-progress" class="note"></p>
+            <fieldset class="quiz-choices">
+              <legend id="quiz-question"></legend>
+              <label class="quiz-choice" for="quiz-choice-a">
+                <input id="quiz-choice-a" type="radio" name="quiz-answer" value="a" />
+                <span id="quiz-label-a"></span>
+              </label>
+              <label class="quiz-choice" for="quiz-choice-b">
+                <input id="quiz-choice-b" type="radio" name="quiz-answer" value="b" />
+                <span id="quiz-label-b"></span>
+              </label>
+              <label class="quiz-choice" for="quiz-choice-c">
+                <input id="quiz-choice-c" type="radio" name="quiz-answer" value="c" />
+                <span id="quiz-label-c"></span>
+              </label>
+            </fieldset>
+            <div class="inspect-actions">
+              <button id="btn-quiz-grade" type="button" disabled>採点する</button>
+              <button id="btn-quiz-prev" type="button" disabled>前の問題</button>
+              <button id="btn-quiz-next" type="button">次の問題</button>
+              <button id="btn-quiz-reset" type="button">最初から</button>
+            </div>
+            <p id="quiz-result" class="lab-status" role="status" aria-live="polite"></p>
+            <p id="quiz-explanation" class="note" hidden></p>
+            <button id="btn-quiz-load" type="button">この問題の教材を読み込む</button>
+            <p id="quiz-load-note" class="note">主入力を置き換え、現在の鍵を保ちます。生成・実行はしません。</p>
+          </div>
+        </details>
       </section>
     </section>
 
@@ -277,9 +359,15 @@
   <script src="js/sandbox-runner.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/samples.js"></script>
+  <script src="js/share-settings.js"></script>
+  <script src="js/share-ui.js"></script>
   <script src="js/editor-state.js"></script>
   <script src="js/learning-core.js"></script>
+  <script src="js/comparison-context.js"></script>
   <script src="js/learning-ui.js"></script>
+  <script src="js/quiz-data.js"></script>
+  <script src="js/quiz-core.js"></script>
+  <script src="js/quiz-ui.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

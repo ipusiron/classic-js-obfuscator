@@ -283,7 +283,7 @@ test("classic-script editor transitions never execute source or access DOM, stor
     fetch() { effects++; throw new Error("Unexpected network request"); },
     __editorExecuted: false,
   }, { codeGeneration: { strings: false, wasm: false } });
-  for (const file of ["../js/samples.js", "../js/editor-state.js"]) {
+  for (const file of ["../js/obfuscator-core.js", "../js/samples.js", "../js/share-settings.js", "../js/editor-state.js"]) {
     vm.runInContext(fs.readFileSync(require.resolve(file), "utf8"), context, { timeout: 1000 });
   }
   assert.deepEqual(Object.keys(context.EditorState).sort(), Object.keys(editor).sort());
@@ -298,6 +298,26 @@ test("classic-script editor transitions never execute source or access DOM, stor
   state = classic.clear(state);
   state = classic.reset(state, "en");
   assert.equal(state.source, samples.get("basic", "en").source);
+  state = classic.applySettings(state, { sampleId: "unicode", shift: 3, language: "ja", view: "compare" });
+  assert.equal(state.source, samples.get("unicode", "ja").source);
   assert.equal(context.__editorExecuted, false);
   assert.equal(effects, 0);
+});
+
+test("shared settings restore exact raw key and text across languages without restoring language or view", () => {
+  for (const rawKey of ["", "003", "invalid", " 3 "]) {
+    let state = editor.editKey(editor.create("ja"), rawKey);
+    const original = state;
+    state = editor.applySettings(state, { sampleId: "unicode", shift: 94, language: "en", view: "compare" });
+    const applied = state;
+    assert.equal(editor.applySettings(state, { sampleId: "unicode", shift: 94, language: "en", view: "normal" }), state);
+    state = editor.restore(state, "en");
+    assert.equal(state.source, original.source);
+    assert.equal(state.key, rawKey);
+    assert.equal(state.pristine, false);
+    assert.equal(state.sampleId, null);
+    assert.equal(state.undo, null);
+    assert.equal(editor.changeLanguage(state, "ja"), state);
+    assert.notEqual(applied.undo, null);
+  }
 });

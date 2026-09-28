@@ -19,6 +19,7 @@ function collect(directory) {
 // is checked separately when the documentation stage updates those files.
 const sourcePaths = [
   "index.html", "script.js", "style.css", "package.json", ".github/workflows/test.yml",
+  ".github/workflows/browser.yml", "test/browser/smoke.py", "test/browser/requirements.txt",
   ...collect("js"), ...collect("sandbox"), ...collect("test"),
 ];
 

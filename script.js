@@ -25,12 +25,18 @@ let outputSource = null;
 let outputShift = null;
 let editorState = null;
 let learningUI = null;
+let quizUI = null;
+let shareUI = null;
+let currentView = "normal";
+let setViewMode = null;
+let applyingSharedSettings = false;
 
 function renderSampleChoice() {
   const sample = Samples.get($("sample-select").value, ObfuscatorI18n.language);
   $("sample-description").textContent = sample.description;
   $("sample-key-note").textContent = t("sampleKeyNote", { shift: sample.recommendedShift });
   $("sample-expected").textContent = t("sampleExpected", { text: sample.expected.observation });
+  if (shareUI) shareUI.invalidate();
 }
 
 function renderEditor() {
@@ -56,6 +62,7 @@ function renderSampleOptions() {
 }
 
 function invalidateOutput() {
+  if (shareUI) shareUI.invalidate();
   if (learningUI) learningUI.clear();
   if (runner) runner.reset();
   $("run-result").textContent = "";
@@ -96,6 +103,7 @@ function init() {
     document,
     t,
     getCurrentOutput: () => hasFreshOutput() ? { snippet: $("outputCode").value, source: outputSource } : null,
+    getCurrentSource: () => editorState.source,
   });
   editorState = EditorState.create(ObfuscatorI18n.language);
   renderEditor();
@@ -114,6 +122,14 @@ function init() {
   $("output-status").textContent = t("initial");
   validateKey();
   $("sample-select").addEventListener("change", renderSampleChoice);
+  quizUI = QuizUI.create({ document, t, getLanguage: () => ObfuscatorI18n.language, onLoadSample: (id) => {
+    editorState = EditorState.load(editorState, id, ObfuscatorI18n.language);
+    $("sample-select").value = id;
+    renderSampleChoice();
+    renderEditor();
+    invalidateOutput();
+    validateKey();
+  } });
   const editorActions = {
     "btn-load-sample": () => EditorState.load(editorState, $("sample-select").value, ObfuscatorI18n.language),
     "btn-clear-input": () => EditorState.clear(editorState),
@@ -128,12 +144,43 @@ function init() {
       validateKey();
     });
   }
+  shareUI = ShareUI.create({
+    document, t,
+    getSettings: () => ({ sampleId: $("sample-select").value, rawKey: editorState.key,
+      language: ObfuscatorI18n.language, view: currentView }),
+    getHash: () => window.location.hash,
+    sampleName: (id) => Samples.get(id, ObfuscatorI18n.language).name,
+    writeClipboard: (value) => navigator.clipboard.writeText(value),
+    applySettings: (settings) => {
+      const next = EditorState.applySettings(editorState, settings);
+      applyingSharedSettings = true;
+      try {
+        editorState = next;
+        ObfuscatorI18n.setLanguage(settings.language);
+        setViewMode(settings.view, false);
+        $("sample-select").value = settings.sampleId;
+        renderEditor();
+        renderSampleOptions();
+        invalidateOutput();
+        learningUI.refreshLanguage();
+        quizUI.refreshLanguage();
+        validateKey();
+        renderRunNotice();
+      } finally {
+        applyingSharedSettings = false;
+      }
+    },
+  });
+  window.addEventListener("hashchange", () => shareUI.receiveHash());
   window.addEventListener("languagechange", () => {
+    if (applyingSharedSettings) return;
     editorState = EditorState.changeLanguage(editorState, ObfuscatorI18n.language);
     renderEditor();
     renderSampleOptions();
     invalidateOutput();
     learningUI.refreshLanguage();
+    quizUI.refreshLanguage();
+    shareUI.refreshLanguage();
     validateKey();
     renderRunNotice();
     $("toast").textContent = "";
@@ -279,8 +326,9 @@ function initViewMode() {
   const outputCodeCompare = $("outputCodeCompare");
 
   // 表示モード切り替え
-  function switchView(mode) {
-    invalidateOutput();
+  function switchView(mode, invalidate = true) {
+    currentView = mode;
+    if (invalidate) invalidateOutput();
     normalBtn.setAttribute("aria-pressed", String(mode === "normal"));
     compareBtn.setAttribute("aria-pressed", String(mode === "compare"));
 
@@ -300,6 +348,8 @@ function initViewMode() {
       outputCodeCompare.value = outputCode.value;
     }
   }
+
+  setViewMode = switchView;
 
   // ボタンクリックイベント
   normalBtn.addEventListener("click", () => switchView("normal"));
