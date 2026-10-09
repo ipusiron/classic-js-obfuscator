@@ -39,6 +39,7 @@ const headingPairs = [
   [4, "学習クイズ", "Learning quiz"],
   [4, "コードを含めない設定共有", "Sharing settings without code"],
   [3, "ビジュネル暗号タブの使い方", "Using the Vigenere tab"],
+  [2, "🎯 ユースケース", "🎯 Use cases"],
   [2, "⚠️ 注意", "⚠️ Cautions"],
   [3, "セキュリティに関する説明", "Security explanation"],
   [2, "🔬 技術・セキュリティ解説", "🔬 Technical and security guide"],
@@ -160,7 +161,7 @@ test("Japanese README preserves the original YAML metadata bytes, keys and block
 });
 
 test("English and Japanese READMEs retain the complete heading correspondence", () => {
-  assert.equal(headingPairs.length, 36, "the correspondence table must cover every section");
+  assert.equal(headingPairs.length, 37, "the correspondence table must cover every section");
   for (const [name, languageIndex] of [["README.md", 1], ["README.en.md", 2]]) {
     const withoutCode = documents[name].replace(/```[\s\S]*?```/g, "");
     const headings = [...withoutCode.matchAll(/^(#{1,6}) (.+)$/gm)]
@@ -339,4 +340,18 @@ test("browser dependencies and Actions are pinned and the test workflow has no d
   assert.doesNotMatch(jobEnvironment, /runner\./, "runner context is unavailable in job-level env");
   assert.match(workflow, /run: python -m playwright install --with-deps chromium\n        env:\n          PLAYWRIGHT_BROWSERS_PATH:/);
   assert.match(workflow, /run: python -B test\/browser\/smoke\.py\n        env:\n          PLAYWRIGHT_BROWSERS_PATH:/);
+});
+
+test('ユースケースの「このツールならではの使い方」を obfuscator-core.js で再計算（日英）', () => {
+  const O = require('../js/obfuscator-core.js');
+  assert.equal(O.caesarShift('HELLO', 3), 'KHOOR');
+  assert.equal(O.entropy('alert(1)').toFixed(4), '3.0000');
+  assert.equal(O.entropy(O.caesarShift('alert(1)', 3)).toFixed(4), '3.0000');
+  const snippet = O.buildSnippet('alert(1)', 3);
+  assert.equal([...snippet].length, 319);
+  assert.equal(O.caesarShift('alert(1)', 95), 'alert(1)');
+  for (const name of ['README.md', 'README.en.md']) {
+    const md = documents[name];
+    assert.ok(md.includes('3.0000') && md.includes('319') && md.includes('95'));
+  }
 });
