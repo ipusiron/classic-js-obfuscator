@@ -430,6 +430,20 @@ Do not apply those tools' statistics or estimates directly to ASCII95 JavaScript
 Settings sharing, quizzes, one-step restore, detailed frequency analysis and the separate reference-code panel remain Caesar-only.
 Keys are included in generated snippets: this does not protect secrets.
 
+## 🎯 Use cases
+
+Ways of using this tool in particular
+
+- Confirming that a bijective shift does not change the information (encoding and information-theory classes): a transform that only shifts printable ASCII replaces characters one to one, so the information per character does not change. The entropy of `alert(1)` is 3.0000, and the entropy of the shifted result is also 3.0000. You can confirm that obfuscation does not reduce the information of the content and does not provide secrecy
+- Confirming that obfuscation greatly increases length and bundles the decoder (obfuscation-versus-encryption classes): obfuscating `alert(1)` (8 characters) produces a 319-character snippet, because the decoder code to restore it is attached to the shifted string. As long as the decoder is inside the snippet, there is no key and anyone who reads it can reverse it. You can confirm that obfuscation only makes code harder to read and is not encryption
+- Confirming that shifting the 95 characters by 95 returns to the start (modular classes): the target is the 95 printable ASCII characters, and shifting by 95 comes around once to the start. Shifting `alert(1)` by 95 returns the original `alert(1)`. You can confirm the modular arithmetic where a shift that is a multiple of the set length returns to the start
+
+General uses
+
+- Learn how classic JavaScript obfuscation works (shifting characters plus a bundled decoder)
+- Use it as material to explain the difference between obfuscation and encryption (key and information)
+- Practice reading obfuscated code (finding the decoder and reversing it)
+
 ## ⚠️ Cautions
 
 - This tool demonstrates obfuscation, meaning reduced readability, rather than confidentiality.
