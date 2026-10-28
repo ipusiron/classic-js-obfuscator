@@ -645,7 +645,7 @@ classic-js-obfuscator/               # Project root
     ├── fixtures/                    # Fixed reference data
     │   ├── expect.json              # Reference outputs and known answers
     │   ├── learning-expect.json     # Fixed reference values for learning helpers
-    │   ├── phase3-expect.json       # Immutable Phase 3 reference data
+    │   ├── phase3-expect.json       # Immutable reference data (changes detected by SHA-256)
     │   └── vigenere-expect.json     # Fixed Vigenere-variant reference values
     ├── format.test.js               # UTF-8, line lengths and readable formatting
     ├── html.test.js                 # CSP, HTML, ARIA and local assets
