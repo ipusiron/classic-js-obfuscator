@@ -679,7 +679,7 @@ classic-js-obfuscator/               # プロジェクトルート
     ├── fixtures/                    # 変更しない参照データ
     │   ├── expect.json              # 生成例と既知解答の期待値
     │   ├── learning-expect.json     # 学習機能の固定参照値
-    │   ├── phase3-expect.json       # 第3弾の固定参照値
+    │   ├── phase3-expect.json       # 固定参照値（SHA-256で変更を検知）
     │   └── vigenere-expect.json     # ビジュネル拡張の固定参照値
     ├── format.test.js               # UTF-8・行長・可読性
     ├── html.test.js                 # CSP・HTML・ARIA・ローカル資産
